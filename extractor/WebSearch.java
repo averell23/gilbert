@@ -70,6 +70,8 @@ public abstract class WebSearch {
      *     the search should return. This may be limited by the search engine, and
      * also note this number is returned for <i>each</i> of the
      * domains that are searched.</li>
+     * <li><i>serach.orCombined</i> The keywords will be combined by OR 
+     * rather than AND. (This should be the default)</li>
      * </ul>
      * <b>Note:</b> Due to differences in the capabilities of the search engines,
      * not all of the parameters may be honoured.
