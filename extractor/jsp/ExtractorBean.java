@@ -40,6 +40,8 @@ public class ExtractorBean {
     protected ExtractingChain extractor;
     /// VectorRefiner for the results
     protected VectorRefiner endRef;
+    /// Counter for failed connections to the data source
+    protected int failures = 0;
     
     /** Creates new ExtractorBean */
     public ExtractorBean() {
@@ -109,12 +111,24 @@ public class ExtractorBean {
      * extraction process will be started anew.
      */
     public void update() throws IOException { 
-        if ((timestamp + timeOut) < System.currentTimeMillis()) {
+        /* Calculate the real time out. Take into account the failures for backoff time. */
+        long realTimeout = (failures == 0)?timeOut:(timeOut * (long) ((failures - 1) * 0.25));
+        if ((timestamp + realTimeout) < System.currentTimeMillis()) {
+            if (failures != 0) {
+                Util.logMessage("Last extraction failed, retry no. " + failures
+                                + ((System.currentTimeMillis() - timestamp) / 1000)
+                                + " seconds.", Util.LOG_MESSAGE);
+            }
             endRef.reset();
             extractor.extract();
             Vector tmpSet = endRef.getUrlList();
             if (tmpSet.size() != 0) {
                 currentSet = tmpSet;
+                timestamp = System.currentTimeMillis();
+                failures = 0;
+            } else {
+                Util.logMessage("ExtractorBean: Extraction failed (no results)", Util.LOG_MESSAGE);
+                if (failures < 5) failures++; // increase the failure counter..
                 timestamp = System.currentTimeMillis();
             }
         }
