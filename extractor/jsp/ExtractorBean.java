@@ -29,7 +29,7 @@ public class ExtractorBean {
     /// Vector with pages that have been found previously
     protected Vector currentSet;
     /// Fallback URL
-    protected String fallbackUrl = "http://127.0.0.1/";
+    protected VisitorURL fallbackUrl;
     /// URL for the data source.
     protected String dataSource = "http://127.0.0.1/marco/url.xml";
     /// Timeout for reloading the data
@@ -45,12 +45,14 @@ public class ExtractorBean {
     public ExtractorBean() {
         Util.setLogLevel(Util.LOG_MESSAGE);
         currentSet = new Vector();
+        fallbackUrl = new VisitorURL();
+        fallbackUrl.setProperty("url.name", "nothing.html");
         currentSet.add(fallbackUrl);
         extractor = new ExtractingChain(dataSource);
         StraightExtractor ext = new StraightExtractor();
         ext.addPrefilter(new LocalVisitFilter());
         ext.addPrefilter(new AgentVisitFilter());
-        extractor.setExtractor(new StraightExtractor());
+        extractor.setExtractor(ext);
         extractor.addRefiner(new SearchingRefiner(true, "ubicomp,handheld,context"));
         extractor.addRefiner(new MetaRefiner());
         endRef = new VectorRefiner();
@@ -59,11 +61,11 @@ public class ExtractorBean {
     }
     
     public void setFallbackUrl(String fbu) {
-        fallbackUrl = fbu;
+        fallbackUrl.setProperty("url.name", fbu);
     }
     
     public String getFallbackUrl() {
-        return fallbackUrl;
+        return fallbackUrl.getProperty("url.name");
     }
     
     public void setDataSource(String ds) {
@@ -104,11 +106,11 @@ public class ExtractorBean {
      */
     public void update() throws IOException { 
         if ((timestamp + timeOut) < System.currentTimeMillis()) {
-            timestamp = System.currentTimeMillis();
             extractor.extract();
             Vector tmpSet = endRef.getUrlList();
             if (tmpSet.size() != 0) {
                 currentSet = tmpSet;
+                timestamp = System.currentTimeMillis();
             }
         }
     }

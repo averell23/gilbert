@@ -1,8 +1,9 @@
 <%@page contentType="text/html"%>
 <%@page import="java.util.*" %>
+<%@page import="gilbert.extractor.*" %>
 
-<jsp:useBean id="extractor" scope="application" class="gilbert.extractor.jsp.ExtractorBean">
-<jsp:setProperty name="extractor"  property="dataSource" value="http://127.0.0.1/marco/url.xml" />
+<jsp:useBean id="extractor" scope="session" class="gilbert.extractor.jsp.ExtractorBean">
+<jsp:setProperty name="extractor"  property="dataSource" value="http://ubicomp.lancs.ac.uk/~dhahn/cgi-bin/weblog.pl" />
 </jsp:useBean>
 <jsp:useBean id="state" scope="application" class="gilbert.extractor.jsp.StateBean">
 <jsp:setProperty name="state" property="autoReload" value="true" />

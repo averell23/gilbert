@@ -52,7 +52,12 @@ public class MetaRefiner extends Refiner {
                 conn.connect();
                 DocumentParser parser = new DocumentParser(DTD.getDTD("HTML"));
                 HTMLEditorKit.ParserCallback pc = new InternalParserCallback();
-                parser.parse(new InputStreamReader(conn.getInputStream()), pc, true);
+                String encoding = conn.getContentEncoding();
+                if (!(urlName.endsWith("html") || urlName.endsWith("htm"))) { 
+                    parser.parse(new InputStreamReader(conn.getInputStream()), pc, true);
+                } else {
+                    Util.logMessage("Meta Refiner: Ignored URL with unknown type: " + urlName, Util.LOG_MESSAGE);
+                }
                 conn.disconnect();
             } catch (MalformedURLException e) {
                 Util.logMessage("Meta refiner had malformed URL: " + urlName, Util.LOG_DEBUG);
@@ -114,7 +119,7 @@ public class MetaRefiner extends Refiner {
                 parseTitle = false;
                 currentURL.setProperty("url.title", titleBuffer.toString());
                 Util.logMessage("MetaRefiner: Stopped title parsing", Util.LOG_DEBUG);
-                Util.logMessage("Put tile string " + titleBuffer, Util.LOG_DEBUG);
+                Util.logMessage("Put title string " + titleBuffer, Util.LOG_DEBUG);
             }
         }
         

@@ -22,7 +22,7 @@ public class LocalVisitFilter implements VisitFilter {
     public boolean accept(Visit v) {
         String val = v.getProperty("visit.visitor.class.local");
         if ((val != null) && (val.equals("true"))) {
-            Util.logMessage("VisitFilter dropped local visit: " + v.getProperty("visit.host"), Util.LOG_MESSAGE);
+            Util.logMessage("Local Visit dropped by filter: " + v.getProperty("visit.host"), Util.LOG_MESSAGE);
             return false;
         }
         return true;

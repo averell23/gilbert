@@ -28,7 +28,8 @@ public class RefinerTest {
             System.err.println("Please give the uri to open.");
             System.exit(1);
         }
-        // Util.setLogLevel(Util.LOG_DEBUG);
+        Util.setLogLevel(Util.LOG_MESSAGE);
+        // Refiner x = new SearchingRefiner(true, "ubicomp, handheld,context");
         Refiner x = new MetaRefiner();
         x.refine(args[0]);
         /* Enumeration e = x.getUrlList().elements();

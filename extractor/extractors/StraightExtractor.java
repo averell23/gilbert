@@ -5,6 +5,7 @@
  */
 
 package gilbert.extractor.extractors;
+import org.xml.sax.*;
 import gilbert.extractor.*;
 import java.util.*;
 
@@ -75,5 +76,17 @@ public class StraightExtractor extends Extractor {
                 pos = buf.indexOf(".", pos + 1);
             }
         }
+    }
+    
+    public void extract(String uri) {
+        visitHash = new Hashtable();
+        Util.logMessage("StraightExtractor initialized.", Util.LOG_MESSAGE);
+        super.extract(uri);
+    }
+    
+    public void extract(InputSource input) {
+        visitHash = new Hashtable();
+        Util.logMessage("StraightExtractor initialized.", Util.LOG_MESSAGE);
+        super.extract(input);
     }
 }

@@ -63,6 +63,10 @@ public abstract class Extractor extends AbstractTransmutor {
      */
     // FIXME: Throws null pointer when file is not of proper format..
     public void extract(InputSource input) {
+        VisitXMLHandler tHandler = new VisitXMLHandler(this);
+        parser.setContentHandler(tHandler);
+        Util.logMessage("Extractor: Parser re-initialized.", Util.LOG_DEBUG);
+        outStream.println("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
         outStream.println("<url_list>");
         try {
             parser.parse(input);
@@ -117,12 +121,18 @@ public abstract class Extractor extends AbstractTransmutor {
      */
     protected void recieveVisit(Visit v) {
         if (prefiltering) {
+            Util.logMessage("Extractor: Executing prefilters.", Util.LOG_DEBUG);
             boolean accepted = true;
             Enumeration filters = prefilters.elements();
             while (filters.hasMoreElements()) {
-                accepted = accepted && ((VisitFilter) filters.nextElement()).accept(v);
+                VisitFilter cFilter = (VisitFilter) filters.nextElement();
+                Util.logMessage("Filtering: Executing filter: " + cFilter.getClass().getName(), Util.LOG_DEBUG);
+                accepted = accepted && cFilter.accept(v);
             }
-            if (!accepted) return;
+            if (!accepted) {
+                Util.logMessage("Extractor: Some filter rejected the visit. Returning to Handler.", Util.LOG_DEBUG);
+                return;
+            }
         } 
         handleVisit(v);
     }

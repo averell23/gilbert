@@ -91,7 +91,9 @@ public abstract class Refiner extends AbstractTransmutor {
      *              from which to read the Input.
      */
     protected void refineBlank(InputSource input) {
-        Util.logMessage("Refiner: Starting generic refine.", Util.LOG_MESSAGE);
+        UrlXMLHandler tHandler = new UrlXMLHandler(this);
+        parser.setContentHandler(tHandler);
+        Util.logMessage("Refiner: Starting generic refine. (Handler initialized)", Util.LOG_MESSAGE);
         Util.logMessage("I am a " + this.getClass().getName(), Util.LOG_MESSAGE);
         try {
             parser.parse(input);
@@ -118,6 +120,7 @@ public abstract class Refiner extends AbstractTransmutor {
      * standard behaviour, but child class may override it.
      */
     public void refine(InputSource input) {
+        outStream.println("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
         startTag("url_list");
         refineBlank(input);
         endTag("url_list");

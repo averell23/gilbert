@@ -2,7 +2,7 @@
 <%@page import="java.util.*"%>
 <%@page import="gilbert.extractor.*"%>
 
-<jsp:useBean id="extractor" scope="application" class="gilbert.extractor.jsp.ExtractorBean">
+<jsp:useBean id="extractor" scope="session" class="gilbert.extractor.jsp.ExtractorBean">
 <jsp:setProperty name="extractor"  property="dataSource" value="http://127.0.0.1/marco/url.xml" />
 </jsp:useBean>
 <jsp:useBean id="state" scope="application" class="gilbert.extractor.jsp.StateBean">
