@@ -4,20 +4,16 @@
  * Created on 18 January 2002, 12:19
  */
 
-package gilbert.extractor;
+package gilbert.extractor.refiners;
 
 import java.util.*;
 import java.net.*;
+import gilbert.extractor.*;
 
 /**
  * Refines into an internal <code>Vector</code>, rather than to the output
  * stream. This will take all URLs from the input source, und create a
  * Vector of <code>VisitorURL</code> objects of this.
- * <p>
- * <b>Please Note:</b> This version will <i>not</i> write anything to the
- * output stream and should be only used as the last Refiner in a chain. 
- * It is also not suitable for large input sources (since all data ist
- * stored internally).
  *
  * @author  Daniel Hahn
  * @version CVS $Revision$
@@ -41,6 +37,7 @@ public class VectorRefiner extends Refiner {
      */
     public void handleURL(VisitorURL url) {
         urlList.add(url);
+        printURL(url);
     }
     
     /**
@@ -58,6 +55,16 @@ public class VectorRefiner extends Refiner {
      */
     public Vector getUrlList() {
         return urlList;
+    }
+    
+    /**
+     * Prints the internal URLs to the output stream again.
+     */
+    public void printAllURLs() {
+        Enumeration list = urlList.elements();
+        while(list.hasMoreElements()) {
+            printURL((VisitorURL) list.nextElement());
+        }
     }
     
 }

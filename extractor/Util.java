@@ -26,8 +26,8 @@ public class Util {
         Properties sysProps = System.getProperties();
         sysProps.setProperty("http.proxyHost", "wwwcache.lancs.ac.uk");
         sysProps.setProperty("http.proxyPort", "8080");
-        sysProps.setProperty("sun.net.client.defaultConnectTimeout", "1000");
-        sysProps.setProperty("sun.net.client.defaultReadTimeout", "1000");
+        sysProps.setProperty("sun.net.client.defaultConnectTimeout", "2000");
+        sysProps.setProperty("sun.net.client.defaultReadTimeout", "2000");
     }
      
     public static final int IP_ADDRESS = 1;
@@ -38,6 +38,8 @@ public class Util {
     public static final int LOG_DEBUG = 10;
     /// Code for normal operation log level
     public static final int LOG_NORMAL = 3;
+    /// Code for "warning" messages
+    public static final int LOG_WARN = 2;
     /// Code for "error" log level
     public static final int LOG_ERROR = 1;
     /// Current logging level

@@ -4,7 +4,8 @@
  * Created on 10 December 2001, 17:20
  */
 
-package gilbert.extractor;
+package gilbert.extractor.extractors;
+import gilbert.extractor.*;
 import java.util.*;
 
 /**
@@ -19,6 +20,10 @@ public class StraightExtractor extends Extractor {
     /// Hash for all entries that have already been extracted.
     Hashtable visitHash;
     
+    /**
+     * Creates a new StraightExtractor.
+     * @param dumpMode If true, the Extractor will not do Web lookups,
+     */
     public StraightExtractor() {
         super();
         visitHash = new Hashtable();

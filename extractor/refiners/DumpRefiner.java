@@ -4,7 +4,8 @@
  * Created on 18 December 2001, 12:09
  */
 
-package gilbert.extractor;
+package gilbert.extractor.refiners;
+import gilbert.extractor.*;
 
 /**
  * This only dumps the origianl list to a new stream (probably using the

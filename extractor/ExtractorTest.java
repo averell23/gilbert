@@ -21,8 +21,8 @@ public class ExtractorTest {
             System.err.println("Please give the uri to open.");
             System.exit(1);
         }
-        // Util.setLogLevel(Util.LOG_DEBUG);
-        Extractor x = new StraightExtractor();
+        Util.setLogLevel(Util.LOG_DEBUG);
+        Extractor x = new ResolvingExtractor();
         x.extract(args[0]);
     }
 

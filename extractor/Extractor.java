@@ -138,5 +138,4 @@ public abstract class Extractor extends AbstractTransmutor {
      * postfilters.
      */
     protected abstract void handleVisit(Visit v);
-    
 }

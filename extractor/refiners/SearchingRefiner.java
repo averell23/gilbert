@@ -4,10 +4,11 @@
  * Created on 14 January 2002, 11:11
  */
 
-package gilbert.extractor;
+package gilbert.extractor.refiners;
 import java.util.*;
 import java.net.*;
 import org.xml.sax.*;
+import gilbert.extractor.*;
 
 /**
  * This takes a existing list of URLs and searches their domains

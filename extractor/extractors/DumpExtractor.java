@@ -4,7 +4,8 @@
  * Created on 10 December 2001, 10:49
  */
 
-package gilbert.extractor;
+package gilbert.extractor.extractors;
+import gilbert.extractor.*;
 
 /**
  *

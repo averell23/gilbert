@@ -4,8 +4,9 @@
  * Created on 08 January 2002, 11:05
  */
 
-package gilbert.extractor;
+package gilbert.extractor.refiners;
 import org.xml.sax.*;
+import gilbert.extractor.*;
 
 /**
  * Refiner that turns an URL list into a XHTML page
