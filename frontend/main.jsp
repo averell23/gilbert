@@ -1,10 +1,13 @@
 <%@page contentType="text/html"%>
 <%@page import="java.util.*" %>
 <%@page import="gilbert.extractor.*" %>
+<%@page import="org.apache.log4j.*" %>
 <%!
     // Global definitions
     /** String that contains the page which is showed on the left side. */
     String selUrl = "nothing.html";
+    /// Logger for this JSP
+    Logger logger = Logger.getLogger("main.jsp");
 %>
 
 <jsp:useBean id="extractor" scope="session" class="gilbert.extractor.jsp.ExtractorBean">
@@ -15,27 +18,28 @@
 <jsp:setProperty name="state" property="reloadFrequency" value="10" />
 </jsp:useBean>
     <%
-        String turnPar = request.getParameter("reload");
         String sid = request.getSession(false).getId();
+        NDC.push(sid);
+        String turnPar = request.getParameter("reload");
         if (turnPar != null) {
             if (turnPar.equals("on")) {
                 state.setAutoReload(true);
                 // Util.logMessage("[User event, sid: " + sid + "] User turned reload on.", Util.LOG_ERROR);
             } else if (turnPar.equals("off")) {
                 state.setAutoReload(false);
-                Util.logMessage("[User event, sid: " + sid + "] User turned reload off.", Util.LOG_ERROR);
+                logger.info("User turned reload off.");
             } else if (turnPar.equals("help")) {
                 state.setAutoReload(false);
                 selUrl = "help.html";
-                Util.logMessage("[User event, sid: " + sid + "] User called help page.", Util.LOG_ERROR);
+                logger.info("User called help page.");
             } else if (turnPar.equals("admin")) {
                 state.setAutoReload(false);
                 selUrl = "admin.jsp";
-                Util.logMessage("[User event, sid: " + sid + "] User called admin page.", Util.LOG_ERROR);
+                logger.info("User called admin page.");
             } else if (turnPar.equals("site")) {
                 state.setAutoReload(false);
                 selUrl = request.getParameter("url");
-                Util.logMessage("[User event, sid: " + sid + "] User called site: " + request.getParameter("url"), Util.LOG_ERROR);
+                logger.info("User called site: " + request.getParameter("url"));
             }
         } else {
             state.setAutoReload(true);
@@ -48,7 +52,7 @@
             Vector extractedURLs = extractor.getUrls();
             int selection = (int) (Math.random() * (extractedURLs.size() - 1));
             selUrl = ((Properties) extractedURLs.get(selection)).getProperty("url.name");
-            Util.logMessage("Update cycle selected: " + selUrl, Util.LOG_DEBUG);
+            if (logger.isDebugEnabled()) logger.debug("Update cycle selected: " + selUrl);
         }
     %>
 
@@ -70,6 +74,7 @@
         out.print("?reload=on");
     }
     out.println("\"/>");
+    NDC.pop();
 %>
 </head>
 

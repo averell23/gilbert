@@ -2,6 +2,7 @@
 <%@page import="java.util.*"%>
 <%@page import="java.net.*"%>
 <%@page import="gilbert.extractor.*"%>
+<%@page import="org.apache.log4j.*" %>
 
 <jsp:useBean id="extractor" scope="session" class="gilbert.extractor.jsp.ExtractorBean">
 <jsp:setProperty name="extractor"  property="dataSource" value="http://127.0.0.1/marco/url.xml" />
@@ -10,8 +11,15 @@
 <jsp:setProperty name="state" property="autoReload" value="true" />
 <jsp:setProperty name="state" property="baseURI" value="<%request.getRequestURI()%>" />
 </jsp:useBean>
+<%!
+    Logger logger = Logger.getLogger("left_part.jsp");
+%>
 
 <html>
+  <%
+    String sid = request.getSession(false).getId();
+    NDC.push(sid);
+  %>
   <head>
     <title></title>
     <link rel="stylesheet" type="text/css" href="standard.css">
@@ -46,12 +54,13 @@
                 URL tmpU = new URL(curSite);
                 siteName = tmpU.getHost();
             } catch (MalformedURLException e) {
-                Util.logMessage("Encountered malformed URL: " + curSite, Util.LOG_MESSAGE);
+                logger.warn("Encountered malformed URL: " + curSite);
             }
             out.print("<a href=\"" + state.getBaseURI() + "?reload=site&url=" + curSite + "\" target=\"_parent\">");
             out.print(siteName);
             out.println("</a><br>");
-        }    
+        }
+        NDC.pop();
     %>
   </body>
 </html>
