@@ -70,8 +70,8 @@ implements org.xml.sax.ContentHandler, org.xml.sax.ErrorHandler {
     }
     
     public void warning(org.xml.sax.SAXParseException e) throws org.xml.sax.SAXException {
-        Util.logMessage("XML Warning in line: " + e.getLineNumber(), Util.LOG_NORMAL);
-        Util.logMessage("Exception was: " + e.getMessage(), Util.LOG_NORMAL);
+        Util.logMessage("XML Warning in line: " + e.getLineNumber(), Util.LOG_WARN);
+        Util.logMessage("Exception was: " + e.getMessage(), Util.LOG_WARN);
     }
     
     public void error(org.xml.sax.SAXParseException e) throws org.xml.sax.SAXException {

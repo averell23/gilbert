@@ -74,7 +74,7 @@ public class SearchingRefiner extends Refiner {
                 return;
             }
             String domainName = parts[parts.length - 2] + "." + parts[parts.length -1];
-            Util.logMessage("Refiner: Trying to search domain: " + domainName, Util.LOG_DEBUG);
+            Util.logMessage("Refiner: Trying to search domain: " + domainName, Util.LOG_MESSAGE);
             sProps.setProperty("search.domains", domainName);
             mySearch.setParameters(sProps);
             Vector results = mySearch.search();

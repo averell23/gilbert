@@ -83,6 +83,7 @@ public class UrlXMLHandler extends AbstractXMLHandler {
             if (!((String) top).equals("url")) {
                 throw(new org.xml.sax.SAXException("URL record not read correctly, popped " + top));
             } else {
+                Util.logMessage("Completed URL: " + currentUrl.getProperty("url.name"), Util.LOG_MESSAGE);
                 refiner.recieveURL(currentUrl);
                 currentUrl = null;
             }

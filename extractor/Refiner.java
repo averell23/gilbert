@@ -52,7 +52,7 @@ public abstract class Refiner extends AbstractTransmutor {
             parser.setContentHandler(tHandler);
             parser.setErrorHandler(tHandler);
         } catch (SAXException e) {
-            System.err.println("*** Extractor aborting due to error: " + e.getMessage());
+            Util.logMessage("*** Extractor aborting due to error: " + e.getMessage(), Util.LOG_ERROR);
             e.printStackTrace();
             // System.exit(1);
         }
@@ -66,6 +66,7 @@ public abstract class Refiner extends AbstractTransmutor {
         if (filter != null) {
             prefiltering = true;
             prefilters.add(filter);
+            Util.logMessage("Added prefilter: " + filter.getClass().getName(), Util.LOG_MESSAGE);
         }
     }
     
@@ -77,6 +78,7 @@ public abstract class Refiner extends AbstractTransmutor {
         if (filter != null) {
             postfiltering = true;
             postfilters.add(filter);
+            Util.logMessage("Added postfilter: " + filter.getClass().getName(), Util.LOG_MESSAGE);
         }
     }
     
@@ -89,16 +91,16 @@ public abstract class Refiner extends AbstractTransmutor {
      *              from which to read the Input.
      */
     protected void refineBlank(InputSource input) {
-        Util.logMessage("Refiner: Starting generic refine.", Util.LOG_DEBUG);
-        Util.logMessage("I am a " + this.getClass().getName(), Util.LOG_DEBUG);
+        Util.logMessage("Refiner: Starting generic refine.", Util.LOG_MESSAGE);
+        Util.logMessage("I am a " + this.getClass().getName(), Util.LOG_MESSAGE);
         try {
             parser.parse(input);
         } catch (SAXException e) {
-            System.err.println("*** Extractor aborting due to error: " + e.getMessage());
+            Util.logMessage("*** Extractor aborting due to error: " + e.getMessage(), Util.LOG_ERROR);
             e.printStackTrace();
             // System.exit(1);
         } catch (java.io.IOException e) {
-            System.err.println("*** Error opening location: " + input);
+            Util.logMessage("*** Error opening location: " + input, Util.LOG_ERROR);
             // System.exit(1);
         }
     }

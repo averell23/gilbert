@@ -81,7 +81,7 @@ public class GoogleSearch extends WebSearch {
         paragraphParsed = false;
         doneParsing = false;
         
-        Util.logMessage("Searching domain " + domain, Util.LOG_DEBUG);
+        Util.logMessage("Searching domain " + domain, Util.LOG_MESSAGE);
         URL sUrl = null;
         
         StringBuffer searchBuf = new StringBuffer(GOOGLE_HOME);

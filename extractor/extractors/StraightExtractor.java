@@ -19,6 +19,10 @@ import java.util.*;
 public class StraightExtractor extends Extractor {
     /// Hash for all entries that have already been extracted.
     Hashtable visitHash;
+    /// HTTP connection timeout backup
+    String connectTO;
+    /// HTTP read timeout backup
+    String readTO;
     
     /**
      * Creates a new StraightExtractor.
@@ -35,7 +39,7 @@ public class StraightExtractor extends Extractor {
      */
     protected void handleVisit(Visit v) {
         String host = v.getProperty("visit.host");
-        Util.logMessage("Handling host: " + host, Util.LOG_DEBUG);
+        Util.logMessage("Straight Extractor: Handling host: " + host, Util.LOG_MESSAGE);
         if ((!visitHash.containsKey(host)) && (Util.hostnameType(host) == Util.HOST_NAME)) {
             visitHash.put(host, "visited");
             Util.logMessage("New hostname: " + host, Util.LOG_DEBUG);

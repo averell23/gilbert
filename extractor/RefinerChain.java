@@ -84,6 +84,7 @@ public class RefinerChain {
             // in the first round we read from input instead
             standOut.reset();            // resets the output buffer
             Refiner current = (Refiner) refinerE.nextElement();
+            Util.logMessage("Starting Refiner from chain: " + current.getClass().getName(), Util.LOG_MESSAGE);
             current.setOutputStream(standOut); // write to the output buffer
             current.refine(tmpInput); // read from the current input
             standOut.flush();
@@ -120,6 +121,7 @@ public class RefinerChain {
     public void addRefiner(Refiner ref) {
         if (ref != null) {
             refinerChain.add(ref);
+            Util.logMessage("Added Refiner: " + ref.getClass().getName(), Util.LOG_MESSAGE);
         }
     }
     

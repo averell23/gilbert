@@ -13,6 +13,7 @@ import org.xml.sax.*;
 import gilbert.extractor.*;
 import gilbert.extractor.extractors.*;
 import gilbert.extractor.refiners.*;
+import gilbert.extractor.filters.*;
 
 /**
  * Java Bean to be used as an interface between the Extractor classes
@@ -42,11 +43,16 @@ public class ExtractorBean {
     
     /** Creates new ExtractorBean */
     public ExtractorBean() {
+        Util.setLogLevel(Util.LOG_MESSAGE);
         currentSet = new Vector();
         currentSet.add(fallbackUrl);
         extractor = new ExtractingChain(dataSource);
+        StraightExtractor ext = new StraightExtractor();
+        ext.addPrefilter(new LocalVisitFilter());
+        ext.addPrefilter(new AgentVisitFilter());
         extractor.setExtractor(new StraightExtractor());
         extractor.addRefiner(new SearchingRefiner(true, "ubicomp,handheld,context"));
+        extractor.addRefiner(new MetaRefiner());
         endRef = new VectorRefiner();
         extractor.addRefiner(endRef);
         timestamp = 0;
