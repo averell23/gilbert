@@ -1,6 +1,6 @@
 <project name="webpages" default="install" basedir=".">
 	<!-- Properties -->
-	<property name="my_home" value="/usr/local/httpd/htdocs/marco" />
+	<property name="my_home" value="${htmldocs}/marco" />
 	
 	<target name="init">
 		<tstamp/>

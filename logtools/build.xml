@@ -13,4 +13,9 @@
 			</fileset>
 		</delete>
 	</target>
+	
+	<target name="install" depends="init">
+		<ant dir="cgi-bin" target="install" />
+		<ant dir="html" target="install" />
+	</target>
 </project>

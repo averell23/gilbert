@@ -10,8 +10,10 @@ require HTTP::Response;
 require Socket;
 require Sys::Hostname;
 require LWP;
+require DBI;
 
 $HTTP_PROXY = "http://wwwcache.lancs.ac.uk:8080";
+$CONFIG_FILE_NAME ="marco.conf";
 
 # Create a object to send out the query
 sub create_ua {
@@ -119,4 +121,22 @@ sub error_message {
 	print STDOUT "<p>\n";
 	print STDOUT $_[0] . "\n";
 	print STDOUT "</p>\n";
+}
+
+# Opens the Database with the values given in the configfile
+sub open_db {
+	my %configs = ();
+	if (open(CONFIGFILE, "$CONFIG_FILE_NAME")) {
+		while (<CONFIGFILE>) {				# FIXME: Config Filer reader sucks big time...
+			@dummy = split(/;/);
+			@parts = split(/=/, $dummy[0]);
+			$configs{$parts[0]} = $parts[1];
+		}
+		# print STDERR "Read: " . $configs{"server"} . "/" . $configs{"user"} . "/" . $configs{"password"};
+		return DBI->connect("DBI:mysql:logs:" . $configs{"server"}, $configs{"user"}, $configs{"password"});
+	} else {
+		print STDERR "Unable to open config file $CONFIG_FILE_NAME";
+		return;
+	}
+	close(CONFIGFILE);
 }

@@ -8,9 +8,6 @@ use Utils;
 use CGI;
 use DBI;
 
-$LOGFILE_NAME="/home/daniel/daten/gilbert/sample_logs/sane_log.txt";
-$LOGFILE_MODE="SANE";
-
 # Just to name all of the global vars that are here...
 %ip_hash = (); 	# Hash with all ip adresses from the logfile
 $distinct_ips = 0;	# number of distinct ip addresses found
@@ -26,23 +23,31 @@ $query = CGI::new();
 
 
 print $query->header();
-print $query->start_html("Logfile Overview");
-print STDOUT "<b>Logfile name:</b> $LOGFILE_NAME <br>";
-# print STDOUT "<img src=\"indicator.pl\" alt=\"Indicator\">";
-# print STDOUT "Passed argument xxx = " . $ENV{'QUERY_STRING'} . "<br>\n";
-# Open the logfile
-if (open(LOGFILE, "$LOGFILE_NAME")) {
-	$LOGFILE_NAME = <LOGFILE>;
-	print STDOUT "Logfile opened o.k.<br>\n";
+print $query->start_html(-title=>'Logfile Overview',
+                         -style=>{'src'=>'/marco/standard.css'});
+# Get a database handle
+$dbh = &Utils::open_db();
+if (!defined($dbh)) { 
+	&Utils::error_message("Could not open database!");
+	$query->end_html();
+	exit 1;
+} else {
+	print STDOUT "Database opened o.k.";
+	
+}
+
+$mode = $query->param("output");
+if ($mode eq "overview") {
 	print STDOUT "<h1>General logfile overview</h1>\n";
 	&analyse_logfile();
 	&print_summary();
 	&print_host_info();
 	&print_ip_info();
 	&print_referer_info();
-} else { 
-	
-	&Utils::error_message("Sorry, logfile could not be opened.");
+} elsif ($mode eq "statistics") {
+	&Utils::error_message("Sorry, the statictics page isn't implemented yet.");
+} else {
+	&Utils::error_message("Sorry, unknown mode $mode.");
 }
 print $query->end_html();
 
@@ -152,40 +157,102 @@ sub print_referer_info {
 sub print_item {
 	my $client = $_[0];
 	my $number = $_[1];
-	my $params = "client=$client";
 	my $refnote = "";
 	my %refhash = ();
 	if (defined($referers_hash{$client})) {
 		$refnote = "[Referer Information available]";
-		my @reflist = @{$referers_hash{$client}};
-		$params = $params . "&referers=";
-		foreach $referer (@reflist) {
-			# print STDERR "Printing referer for $client: $referer\n";
-			if (!defined($refhash{$referer})) {
-				$params = $params . $referer . ",";
-				$refhash{$referer} = "visited";
-			}
-		}
 	}
 	print STDOUT "<tr>\n";
 	# <img src= \"indicator.pl?$client\">
-	print STDOUT "<td><a href=\"details.pl?$params\">$client</a></td>\n";
+	print STDOUT "<td><a href=\"details.pl?client=$client\">$client</a></td>\n";
 	print STDOUT "<td>$refnote</td>\n";
 	print STDOUT "<td>$number</td>\n";
 	print STDOUT "</tr>\n";
 }
 
+# Prepares the WHERE clause that selects the records out of the database
+sub prepare_where {
+	my $noerror = $query->param("noerror");
+	my $nopics = $query->param("nopics");
+	my $nolocal = $query->param("nolocal");
+	my $nolocalref = $query->param("nolocalref");
+	my $nobots = $query->param("nobots");
+	my $client_include = $query->param("client_include");
+	my $client_exclude = $query->param("client_exclude");
+	my $referer_include = $query->param("referer_include");
+	my $referer_exclude = $query->param("referer_exclude");
+	my $document_include = $query->param("document_include");
+	my $document_exclude = $query->param("document_exclude");
+	my @where = ();
+	if (defined($noerror) && $noerror eq "true") {
+		my $sth = $dbh->prepare("SELECT opt_val FROM options WHERE opt_key=\"select_errors\"");
+		$sth->execute or die "Unexpected SQL error";
+		$row = $sth->fetchrow_arrayref;
+		push(@where, "NOT (" . $row->[0] . ")");
+	}
+	if (defined($nopics) && $nopics eq "true") {
+		my $sth = $dbh->prepare("SELECT opt_val FROM options WHERE opt_key=\"select_pictures\"");
+		$sth->execute or die "Unexpected SQL error";
+		$row = $sth->fetchrow_arrayref;
+		push(@where, "NOT (" . $row->[0] . ")");
+	}
+	if (defined($nolocal) && $nolocal eq "true") {
+		my $sth = $dbh->prepare("SELECT opt_val FROM options WHERE opt_key=\"select_local\"");
+		$sth->execute or die "Unexpected SQL error";
+		$row = $sth->fetchrow_arrayref;
+		push(@where, "NOT (" . $row->[0] . ")");
+	}
+	if (defined($nolocalref) && $nolocalref eq "true") {
+		my $sth = $dbh->prepare("SELECT opt_val FROM options WHERE opt_key=\"select_local_ref\"");
+		$sth->execute or die "Unexpected SQL error";
+		$row = $sth->fetchrow_arrayref;
+		push(@where, "NOT (" . $row->[0] . ")");
+	}
+	if (defined($nobots) && $nobots eq "true") {
+		my $sth = $dbh->prepare("SELECT opt_val FROM options WHERE opt_key=\"select_bots\"");
+		$sth->execute or die "Unexpected SQL error";
+		$row = $sth->fetchrow_arrayref;
+		push(@where, "NOT (" . $row->[0] . ")");
+	}
+	if (defined($client_include) && !($client_include eq "")) {
+		push(@where, "client LIKE \"$client_include\"");
+	}
+	if (defined($client_exclude) && !($client_exclude eq "")) {
+		push(@where, "client NOT LIKE \"$client_exclude\"");
+	}
+	if (defined($referer_include) && !($referer_include eq "")) {
+		push(@where, "referer LIKE \"$referer_include\"");
+	}
+	if (defined($referer_exclude) && !($referer_exclude eq "")) {
+		push(@where, "referer NOT LIKE \"$referer_exclude\"");
+	}
+	if (defined($document_include) && !($document_include eq "")) {
+		push(@where, "document LIKE \"$document_include\"");
+	}
+	if (defined($document_exclude) && !($document_exclude eq "")) {
+		push(@where, "document NOT LIKE \"$document_exclude\"");
+	}
+	return join(" AND ", @where);
+}
+
 # This does the main analysis of the logfile
 sub analyse_logfile {
+	# Create the select statement and go to the database...
+	my $where = &prepare_where();
+	my $select = "SELECT client, referer FROM log WHERE $where";
+	print "<h2>SELECT statement for this data</h2>\n";
+	print "<p>$select</p>\n";
+	my $sth = $dbh->prepare($select);
+	$sth->execute or die "Unexpected SQL error";
+
 	# Ok, let's go through all these lines
-	while (<LOGFILE>) {
+	while ($row = $sth->fetchrow_arrayref) {
 		$lines++;
-		@line = &Utils::split_logline($_, $LOGFILE_MODE);
 		# Now, the first interesting entry is the
 		# client adress or hostname. This should be
 		# in the first field of each line.
-		$client = $line[0];
-		$referer = $line[7];
+		$client = $row->[0];
+		$referer = $row->[1];
 		if (!($client eq "-")) { 		# Ignore bad/empty client lines
 			if (&Utils::is_ip($client)) {
 				# We have an ip address
@@ -229,5 +296,5 @@ sub analyse_logfile {
 				$referers_reverse{$referer_site} = \@clist;
 			}
 		}
-	}
+	 }
 }

@@ -1,6 +1,6 @@
 <project name="scripts" default="install" basedir=".">
 	<!-- Properties -->
-	<property name="my_home" value="/usr/local/httpd/cgi-bin/marco" />
+	<property name="my_home" value="${cgibin}/marco" />
 	
 	<target name="init">
 		<tstamp/>

@@ -5,30 +5,33 @@
 #
 
 use Utils;
+use CGI;
 
-$params = $ENV{"QUERY_STRING"};
-@param_list = split(/\&/, $params);
-@sitelist = ();
-foreach $pstring (@param_list) {
-	my @parts = split(/\=/, $pstring);
-	if ($parts[0] eq "referer") {
-		$referer_site = $parts[1];
-	} elsif ($parts[0] eq "site") {
-		shift(@parts);
-		push(@sitelist, join('=', @parts));
-	} elsif ($parts[0] eq "short") {
-		$short = $parts[1];
-	}
-}
-&Utils::html_header("Referer Site overview");
+$query = CGI::new();
+
+$referer_site = $query->param("referer");
+
+print $query->header();
+print $query->start_html(-title=>'Logfile Overview',
+                         -style=>{'src'=>'/marco/standard.css'});
+
+if (!($dbh = &Utils::open_db())) {
+	&Utils::error_message("Could not open database.");
+	print $query->html_end();
+	exit 1;
+}			 
+
 print("<h1>Referer overview: $referer_site</h1>\n");
 print("<h2>List of clients referred by this site:</h2>\n");
 print("<ul>\n");
-foreach $site (@sitelist) {
-	print("<li><a href=\"details.pl?client=$site\">$site</a></li>\n");
-}
-if ($short eq "true") {
-	print("<p><b>This list has been shortened to allow CGI handling.</b></p>\n");
+
+$sth = $dbh->prepare("SELECT client, referer FROM log WHERE referer LIKE \"%$referer_site%\"");
+$sth->execute or die("Unexpected SQL error.");
+while ($row = $sth->fetchrow_arrayref) {
+	$client = $row->[0];
+	$referral = $row->[1];
+	print("<li><a href=\"details.pl?client=$client\">$client</a>\n");
+	print(" (referred through <a href=\"$referral\">$referral</a>)</li>\n");
 }
 print("</ul>\n");
-&Utils::html_footer();
+print $query->end_html();
