@@ -3,6 +3,7 @@
 <project name="gilbert" basedir=".." default="all">
     <target name="init">
         <tstamp/>
+        <property name="cvsroot" value="dhahn@ubicomp:/home/dhahn/.cvsroot" />
     </target>
 
     <target name="extractor_clean" depends="init">
@@ -50,5 +51,9 @@
                 <include name="*.class" />
             </classes>
         </war>
+    </target>
+    <target name="revision" depends="init">
+        <cvs dest="." command="update" cvsRoot="${cvsroot}" />
+	<antcall target="frontend_war" />
     </target>
 </project>
