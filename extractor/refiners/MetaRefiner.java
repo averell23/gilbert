@@ -26,6 +26,7 @@ public class MetaRefiner extends Refiner {
     /** Creates a new instance of MetaRefiner */
     public MetaRefiner() {
         passing = true;
+        maxHandlers = 45;
     }
     
     /**
@@ -37,6 +38,7 @@ public class MetaRefiner extends Refiner {
      * the postfilters.
      */
     public void handleURL(VisitorURL url) {
+        logger.debug("Entering URL handler.");
         String urlName = url.getProperty("url.name");
         SiteInfo sInfo = Util.siteStatus(urlName);
         String title = sInfo.getMetaTitle();
@@ -54,6 +56,7 @@ public class MetaRefiner extends Refiner {
                 url.addKeyword((String) keywordsE.nextElement());
             }
         }
+        logger.debug("Leaving URL handler");
     }
     
 }

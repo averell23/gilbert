@@ -34,6 +34,7 @@ public class StraightExtractor extends Extractor {
         super();
         logger = Logger.getLogger(this.getClass());
         visitHash = new Hashtable();
+        maxHandlers = 45;
         logger.debug("Created.");
     }
     
@@ -42,20 +43,23 @@ public class StraightExtractor extends Extractor {
      * Override this to do the actual extraction work.
      */
     protected void handleVisit(Visit v) {
+        logger.info("Entering handleVisit");
         String host = v.getProperty("visit.host");
         if (logger.isInfoEnabled()) logger.info("Handling host: " + host);
         if (Util.hostnameType(host) == Util.HOST_NAME) {
             if (logger.isDebugEnabled()) logger.debug("New hostname: " + host);
             if (Util.siteStatus("http://" + host + "/").getAlive()) {
-                startTag("url");
-                printTag("name", "http://" + host + "/");
-                String location = v.getProperty("visit.location_code");
-                if (location != null) printTag("location_code", location);
-                String time = v.getProperty("visit.timestamp");
-                if (time != null) printTag("timestamp", time);
-                String referer = v.getProperty("visit.referer.url");
-                if (referer != null) printTag("referer", referer);
-                endTag("url");
+                synchronized (outStream) {
+                    startTag("url");
+                    printTag("name", "http://" + host + "/");
+                    String location = v.getProperty("visit.location_code");
+                    if (location != null) printTag("location_code", location);
+                    String time = v.getProperty("visit.timestamp");
+                    if (time != null) printTag("timestamp", time);
+                    String referer = v.getProperty("visit.referer.url");
+                    if (referer != null) printTag("referer", referer);
+                    endTag("url");
+                }
             }
             StringBuffer buf = new StringBuffer(host);
             // Find the last dot in the hostname
@@ -67,14 +71,16 @@ public class StraightExtractor extends Extractor {
                 if (!visitHash.containsKey(subdom)) {
                     if (Util.siteStatus("http://" + subdom + "/").getAlive()) {
                         if (logger.isDebugEnabled()) logger.debug("Found URL: " + subdom);
-                        startTag("url");
-                        printTag("name", "http://" + subdom + "/");
-                        String location = v.getProperty("visit.location_code");
-                        if (location != null) printTag("location_code", location);
-                        String time = v.getProperty("visit.timestamp");
-                        if (time != null) printTag("timestamp", time);
-                        printTag("degree", "0");
-                        endTag("url");
+                        synchronized (outStream) {
+                            startTag("url");
+                            printTag("name", "http://" + subdom + "/");
+                            String location = v.getProperty("visit.location_code");
+                            if (location != null) printTag("location_code", location);
+                            String time = v.getProperty("visit.timestamp");
+                            if (time != null) printTag("timestamp", time);
+                            printTag("degree", "0");
+                            endTag("url");
+                        }
                     }
                     visitHash.put(subdom, "visited");
                 }
@@ -83,15 +89,15 @@ public class StraightExtractor extends Extractor {
         }
     }
     
-    public void extract(String uri) {
-        visitHash = new Hashtable();
-        logger.info("Initialized.");
-        super.extract(uri);
+    public synchronized void extract(String uri) {
+        extract(new InputSource(uri));
     }
     
-    public void extract(InputSource input) {
+    public synchronized void extract(InputSource input) {
         visitHash = new Hashtable();
-        logger.info("Initialized.");
+        logger.debug("Initialized.");
         super.extract(input);
+        logger.debug("Extraction finished.");
     }
-}
+    
+} // class

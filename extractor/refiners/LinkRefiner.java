@@ -11,7 +11,7 @@ import java.util.*;
 import org.apache.log4j.*;
 
 /**
- * Finds all URLs linked from the current URL. 
+ * Finds all URLs linked from the current URL.
  *
  * @author  Daniel Hahn
  * @version CVS $Revision$
@@ -23,10 +23,11 @@ public class LinkRefiner extends Refiner {
     /** Creates a new instance of LinkRefiner */
     public LinkRefiner() {
         passing = true;
+        maxHandlers = 20;
         logger = Logger.getLogger(this.getClass());
         logger.debug("Created.");
     }
-
+    
     /** Must be overridden by child classes to handle each of
      * the URLs.
      *
@@ -36,7 +37,7 @@ public class LinkRefiner extends Refiner {
      */
     public void handleURL(VisitorURL url) {
         String urlStr = url.getProperty("url.name");
-        if (logger.isDebugEnabled()) logger.debug("LinkRefiner: Handling URL " + url);
+        logger.debug("handleURL()");
         SiteInfo info = Util.siteStatus(urlStr);
         Vector links = info.getLinks();
         if (links.size() > 0) {
@@ -45,18 +46,20 @@ public class LinkRefiner extends Refiner {
                 String degreeStr = (String) url.getProperty("url.degree");
                 degree = Integer.parseInt(degreeStr);
             } catch (NumberFormatException e) {
-                logger.warn("LinkRefiner: Unable to determine degree for URL " 
+                logger.warn("LinkRefiner: Unable to determine degree for URL "
                 + url + " (" + e.getMessage() + ")" );
             }
             Enumeration linksE = links.elements();
             while (linksE.hasMoreElements()) {
                 String link = (String) linksE.nextElement();
                 if (logger.isInfoEnabled()) logger.info("LinkRefiner: Added linked URL " + link);
-                startTag("url");
-                printTag("name", link);
-                printTag("timestamp", (String) url.getProperty("url.timestamp"));
-                printTag("degree", "" + (degree + 1));
-                endTag("url");
+                synchronized (outStream) {
+                    startTag("url");
+                    printTag("name", link);
+                    printTag("timestamp", (String) url.getProperty("url.timestamp"));
+                    printTag("degree", "" + (degree + 1));
+                    endTag("url");
+                }
             }
         }
     }
