@@ -1,0 +1,18 @@
+<project name="webpages" default="install" basedir=".">
+	<!-- Properties -->
+	<property name="my_home" value="/usr/local/httpd/htdocs/marco" />
+	
+	<target name="init">
+		<tstamp/>
+	</target>
+	
+	<target name="install" depends="init">
+		<mkdir dir="${my_home}" />
+		<copy todir="${my_home}">
+			<fileset dir="${basedir}">
+				<include name="**/*.html" />
+				<include name="**/*.css" />
+			</fileset>
+		</copy>
+	</target>
+</project>

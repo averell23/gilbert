@@ -1,0 +1,24 @@
+<project name="scripts" default="install" basedir=".">
+	<!-- Properties -->
+	<property name="my_home" value="/usr/local/httpd/cgi-bin/marco" />
+	
+	<target name="init">
+		<tstamp/>
+	</target>
+	
+	<target name="install" depends="init">
+		<mkdir dir="${my_home}" />
+		<copy todir="${my_home}">
+			<fileset dir="${basedir}">
+				<include name="**/*.pl" />
+				<include name="**/*.gif" />
+				<include name="**/*.conf" />
+			</fileset>
+		</copy>
+		<chmod perm="ugo+x">
+			<fileset dir="${my_home}">
+				<include name="**/*.pl" />
+			</fileset>
+		</chmod>
+	</target>
+</project>

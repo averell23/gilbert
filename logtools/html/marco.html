@@ -1,0 +1,75 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+       "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Vistior Analysis</title>
+<link rel="stylesheet" type="text/css" href="standard.css">
+</head>
+<body>
+<h1>Marco: Visitor Analysis</h1>
+
+<p>
+Fill out the form and select the <i>Analyze!</i> Button to send off the data.
+</p>
+
+<form action="/cgi-bin/log_overview.pl" method="get">
+<h2>Preselect Excludes</h2>
+<input type="checkbox" name="noerror" value="true" checked />
+No unsuccessful requests<br />
+<input type="checkbox" name="nopics" value="true" checked />
+No pictures<br />
+<input type="checkbox" name="nolocal" value="true" />
+No local clients<br />
+<input type="checkbox" name="nolocalref" value="true" />
+No local referrals<br />
+<input type="checkbox" name="nobots" value="true" />
+No known searchbots <br />
+<h2>Select Output format</h2>
+<input type="radio" name="output" value="overview" checked />Log overview
+<input type="radio" name="output" value="statistics" />Statistics summary
+<h2>Custom Keywords</h2>
+<h3>CLIENT Field</h3>
+<table border="0">
+<tr>
+<td>Include: </td>
+<td><input type="text" name="client_include" size="64" maxlength="255"></td>
+</tr>
+<tr>
+<td>Exclude: </td>
+<td><input type="text" name="client_exclude" size="64" maxlength="255"></td>
+</td>
+</table>
+<h3>REFERER Field</h3>
+<table border="0">
+<tr>
+<td>Include: </td>
+<td><input type="text" name="referer_include" size="64" maxlength="255"></td>
+</tr>
+<tr>
+<td>Exclude: </td>
+<td><input type="text" name="referer_exclude" size="64" maxlength="255"></td>
+</td>
+</table>
+<h3>DOCUMENT Field</h3>
+<table border="0">
+<tr>
+<td>Include: </td>
+<td><input type="text" name="document_include" size="64" maxlength="255"></td>
+</tr>
+<tr>
+<td>Exclude: </td>
+<td><input type="text" name="document_exclude" size="64" maxlength="255"></td>
+</td>
+</table>
+<br />
+Includes/Excludes should be comma-separated and can have % and _ placeholders 
+(like the mySQL LIKE comparator).
+<br />
+<br />
+<input type="submit" value=" Analyze! " />
+<input type="reset" value=" Reset Form "/>
+</form>
+
+</body>
+</html>
+

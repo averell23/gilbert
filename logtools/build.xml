@@ -1,0 +1,16 @@
+<project name="logtools" default="init" basedir=".">
+	<property name="htmldocs" value="/usr/local/httpd/htdocs" />
+	<property name="cgibin" value="/usr/local/httpd/cgi-bin" />
+	
+	<target name="init">
+		<tstamp />
+	</target>
+	
+	<target name="clean" depends="init">
+		<delete>
+			<fileset dir="${basedir}" defaultexcludes="no">
+				<include name="**/*~" />
+			</fileset>
+		</delete>
+	</target>
+</project>
