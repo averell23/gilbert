@@ -171,6 +171,10 @@ public abstract class Refiner extends AbstractTransmutor {
      * the prefiltering and then calls the <code>handleURL</code> method.
      */
     protected void recieveURL(VisitorURL url) {
+        if (logger.isDebugEnabled()) {
+            logger.debug("Handling URL: " + url);
+            logger.debug("URL name: " + url.getProperty("url.name"));
+        }
         int degree = 0;
         try {
             degree = Integer.valueOf(url.getProperty("url.degree")).intValue();
