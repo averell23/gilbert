@@ -27,7 +27,16 @@ public class TextOutputFrame extends javax.swing.JFrame  {
     public TextOutputFrame(Reader input, Writer output) {
         initComponents();
         this.input = input;
-        this.output = new PrintWriter(output);
+        if (output == null) {
+            // Create dummy writer
+            this.output = new PrintWriter(new Writer(){
+                public void flush() { };
+                public void close() { };
+                public void write(char[] cbuf, int off, int len) { };
+            });
+        } else {
+            this.output = new PrintWriter(output);
+        }
     }
 
     /** This method is called from within the constructor to
