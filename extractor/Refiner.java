@@ -143,7 +143,8 @@ public abstract class Refiner extends AbstractTransmutor {
             boolean accepted = true;
             Enumeration filters = prefilters.elements();
             while (filters.hasMoreElements()) {
-                accepted = accepted && ((URLFilter) filters.nextElement()).accept(url);
+                URLFilter nextFilter = (URLFilter) filters.nextElement();
+                accepted = accepted && nextFilter.accept(url);
             }
             if (!accepted) return;
         }
