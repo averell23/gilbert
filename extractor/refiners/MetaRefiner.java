@@ -50,7 +50,9 @@ public class MetaRefiner extends Refiner {
         }
         if (keywords.size() > 0) {
             Enumeration keywordsE = keywords.elements();
-            url.addKeyword((String) keywordsE.nextElement());
+            while (keywordsE.hasMoreElements()) {
+                url.addKeyword((String) keywordsE.nextElement());
+            }
         }
     }
     
