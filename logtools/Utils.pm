@@ -103,6 +103,26 @@ sub split_logline {
 			print STDERR "Error parsing line in ALBRECHT's format\n";
 			print STDERR $line . "\n";
 		}
+	} elsif ($mode eq "COMBINED") {
+		# Parse Apache's combined log format
+		#if ($line =~ /(.*)\s(\S+)\s->\s(\S+)\s(\S+)\s(\S+)\s(\S+)\s(\[.*\])\s(\".*\")\s(\S+)\s(\S+)/) {
+		if ($line =~ /(\S+)\s(\S+)\s(\S+)\s(\[.*\])\s(\".*\")\s(\S+)\s(\S+)\s(\".*\")\s(\".*\")/) {
+			$client = $1;
+			$identity = $2;
+			$username = $3;
+			$timestamp = &convert_date($4);
+			$request = $5;
+			$status = $6;
+			$size = $7;
+			$referer = $8;
+			$user_agent = $9;
+			if ($request =~ /\S+\s(\S+)\s\S+/) {
+				$document = $1;
+			}
+		} else {
+			print STDERR "Error parsing line in COMBINED format\n";
+			print STDERR $line . "\n";
+		}
 	} elsif ($mode eq "SANE") {
 		# Parse the sane format, where all fields are in the correct
 		# order and tab-separated.
