@@ -112,6 +112,7 @@ public abstract class Refiner extends AbstractTransmutor {
      *              from which to read the Input.
      */
     protected void refineBlank(InputSource input) {
+        visitCache = new Hashtable();
         UrlXMLHandler tHandler = new UrlXMLHandler(this);
         parser.setContentHandler(tHandler);
         Util.logMessage("Refiner: Starting generic refine. (Handler initialized)", Util.LOG_MESSAGE);
