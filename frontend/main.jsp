@@ -30,6 +30,7 @@
             Vector extractedURLs = extractor.getUrls();
             int selection = (int) (Math.random() * (extractedURLs.size() - 1));
             selUrl = ((Properties) extractedURLs.get(selection)).getProperty("url.name");
+            Util.logMessage("Update cycle selected: " + selUrl, Util.LOG_DEBUG);
         }
     %>
 

@@ -56,5 +56,8 @@ seconds.
     }
 %></a>
 </p>
+<p>
+<b>Session ID:</b> <%=request.getSession(false).getId()%>
+</p>
 </body>
 </html>
