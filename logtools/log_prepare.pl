@@ -7,6 +7,7 @@ use Utils;
 use XML::Writer;
 use IO;
 use CGI;
+use Socket;
 
 @local_net = ("129.13");
 @local_domain = ("karlsruhe.de", "uka.de", "teco.edu");
@@ -30,7 +31,7 @@ if (!open(COUNTRIES, "$COUNTRY_CODES_NAME") ){
 
 &init_tld();
 
-$writer = new XML::Writer(DATA_MODE => 1, DATA_INDENT => 2);
+$writer = new XML::Writer(DATA_MODE => 1, DATA_INDENT => 2, OUTPUT => STDOUT);
 $writer->xmlDecl("ISO-8859-1", "yes");
 $writer->startTag("visitlist");
 while (<LOGFILE>) {
@@ -41,6 +42,15 @@ while (<LOGFILE>) {
 	$document = $line[9];
 	$timestamp = $line[3];
 	$document =~ s/[^a-zA-Z_0-9:\/\-\.~]//g; # Squasch control characters
+	# Try to lookup the client's real name
+	# This can be left out if the log contains proper hostnames...
+	my $client_addr = inet_aton($client);
+	if (defined($client_addr)) {
+            my @packet = gethostbyaddr($client_addr, AF_INET);
+        }
+	if (defined($packet[0])) {
+		$client = $packet[0];
+	}
 	# print "\n\n**********************************\n";
 	# print "Client:\t$client\n";
 	# print "User Agent:\t$user_agent\n";
