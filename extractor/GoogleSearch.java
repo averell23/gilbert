@@ -14,7 +14,10 @@ import java.io.*;
 import java.net.*;
 /**
  * This is a web search using the Google search engine (http://www.google.com/).
- * Current version supports only the search.keywords parameter.
+ * Current version supports only the search.keywords, search.resultcount and
+ * search.domain parameters. The search.languages parameter is also supported,
+ * but must contain the languege code that Google uses (e.g. de for German,
+ * ja for Japanese, en for English, ...)
  *
  * @author  Daniel Hahn
  * @version CVS $Revision$
@@ -61,13 +64,24 @@ public class GoogleSearch extends WebSearch {
         keywords = keywords.replace(',', '+');
         String domainStr = parameters.getProperty("search.domains");
         String noOfResults = parameters.getProperty("search.resultcount");
-        if ((domainStr == null) || keywords.equals("")) {
-            searchGoogle(keywords, "", noOfResults);
-        } else {
-            Vector domains = splitString(domainStr);
-            Enumeration domEnum = domains.elements();
-            while (domEnum.hasMoreElements()) {
-                searchGoogle(keywords, (String) domEnum.nextElement(), noOfResults);
+        String languageStr = parameters.getProperty("search.languages");
+        Vector domains = new Vector();
+        domains.add("");
+        Vector languages = new Vector();
+        languages.add("");
+        if ((domainStr != null) && !domainStr.equals("")) {
+            domains = splitString(domainStr);
+        }
+        if ((languageStr != null) && !languageStr.equals("")) {
+            languages = splitString(languageStr);
+        }
+        Enumeration domEnum = domains.elements();
+        Enumeration langEnum = languages.elements();
+        while (domEnum.hasMoreElements()) {
+            String curDom = (String) domEnum.nextElement();
+            while (langEnum.hasMoreElements()) {
+                String curLang = (String) langEnum.nextElement();
+                searchGoogle(keywords, curLang, curDom, noOfResults);
             }
         }
         return results;
@@ -76,12 +90,12 @@ public class GoogleSearch extends WebSearch {
     /**
      * Creates the search URL and calls the search.
      */
-    protected void searchGoogle(String keywords, String domain, String numberOfResults) {
+    protected void searchGoogle(String keywords, String language, String domain, String numberOfResults) {
         parseResults = false;
         paragraphParsed = false;
         doneParsing = false;
         
-        Util.logMessage("Searching domain " + domain, Util.LOG_MESSAGE);
+        Util.logMessage("Searching domain " + domain + ", language: " + language, Util.LOG_MESSAGE);
         URL sUrl = null;
         
         StringBuffer searchBuf = new StringBuffer(GOOGLE_HOME);
@@ -92,6 +106,9 @@ public class GoogleSearch extends WebSearch {
         searchBuf.append("&num=" + numberOfResults);
         if ((domain != null) && (!domain.equals(""))) {
             searchBuf.append("&as_sitesearch=" + domain);
+        }
+        if ((language != null) && (!language.equals(""))) {
+            searchBuf.append("&lr=lang_" + language);
         }
         searchBuf.append("&btnG=Google+Search");
         Util.logMessage("Using URL: " + searchBuf, Util.LOG_DEBUG);
