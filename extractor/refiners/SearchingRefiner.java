@@ -98,7 +98,7 @@ public class SearchingRefiner extends Refiner {
             if (logger.isDebugEnabled()) logger.debug("Refiner: Found host name: " + hostStr);
             
             String[] parts = hostStr.split("\\.");
-            if ((parts == null) || (parts.length == 0)) {
+            if ((parts == null) || (parts.length < 2)) {
                 logger.error("Error splitting hostname");
                 return;
             }
