@@ -43,7 +43,6 @@ public class ExtractorTest {
         try {
             extClass = Class.forName("gilbert.extractor.extractors." + extractor);
             x = (Extractor) extClass.newInstance();
-            x.addPrefilter(new LocalVisitFilter());
             timestamp = System.currentTimeMillis();
             x.extract(uri);
             x.getOutputStream().flush();
