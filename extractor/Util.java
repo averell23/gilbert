@@ -9,6 +9,9 @@ package gilbert.extractor;
 import java.net.*;
 import java.util.*;
 import java.io.*;
+import javax.swing.text.*;
+import javax.swing.text.html.*;
+import javax.swing.text.html.parser.*;
 
 /**
  * Class with some neat static utility mehtods on can use.
@@ -103,6 +106,15 @@ public class Util {
                 String contentType = conn.getContentType();
                 Util.logMessage("Got content type: " + contentType, Util.LOG_DEBUG);
                 retVal.setContentType(contentType);
+                // Parse the page if it's HTML
+                if ((contentType != null) && contentType.equals("text/html")) {
+                    DocumentParser parser = new DocumentParser(DTD.getDTD("HTML"));
+                    HTMLEditorKit.ParserCallback pc = new Util.InternalParserCallback(retVal);
+                    parser.parse(new InputStreamReader(conn.getInputStream()), pc, true);
+                } else {
+                    Util.logMessage("Site Status parsing: Ignored URL with non-html type: " + contentType + "(" + urlStr + ")", Util.LOG_MESSAGE);
+                }
+                // End parsing code
                 conn.disconnect();
                 if (resCode >= 400) { // If the code is not an ok or redirect
                     Util.logMessage("Host was not alive", Util.LOG_MESSAGE);
@@ -231,4 +243,106 @@ public class Util {
             Util.logMessage("Util: Cache cleanup complete.", Util.LOG_MESSAGE);
         }
     }
+    
+    /**
+     * Internal Parser Callback class, for parsing documents for additional
+     * SiteStatus information
+     */
+    protected static class InternalParserCallback extends HTMLEditorKit.ParserCallback {
+        /// Indicates if the title is being parsed at the moment.
+        boolean parseTitle = false;
+        /// StringBuffer for the title string.
+        StringBuffer titleBuffer;
+        /// SiteInfo object this parser puts the data into
+        SiteInfo info;
+        
+        /**
+         * Creates a new InternalParserCallback.
+         * @param info The <code>SiteInfo</code> object that takes the
+         *             information from this parser.
+         */
+        public InternalParserCallback(SiteInfo info) {
+            this.info = info;
+        }
+        
+        public void handleStartTag(HTML.Tag tag, MutableAttributeSet a, int pos) {
+            // check for the <title> tag
+            if (tag.equals(HTML.Tag.TITLE)) {
+                Util.logMessage("Site Info Parser: Started Title Tag.", Util.LOG_DEBUG);
+                parseTitle = true;
+                titleBuffer = new StringBuffer();
+                return;
+            }
+            
+            // check for the Meta tag
+            if (tag.equals(HTML.Tag.META)
+            && a.isDefined(HTML.Attribute.NAME)
+            && a.isDefined(HTML.Attribute.CONTENT)) {
+                String attrib = a.getAttribute(HTML.Attribute.NAME).toString().toLowerCase();
+                if (attrib.equals("keywords")) {
+                    String keywords = a.getAttribute(HTML.Attribute.CONTENT).toString();
+                    String[] keylist = keywords.split("\\s*,\\s*");
+                    for (int i = 0 ; i < keylist.length ; i++) {
+                        info.addMetaKeyword(keylist[i]);
+                        Util.logMessage("Site Info Parser: Added META keyword: " + keylist[i], Util.LOG_DEBUG);
+                    }
+                }
+                if (attrib.equals("description")) {
+                    info.setMetaDescription(a.getAttribute(HTML.Attribute.CONTENT).toString());
+                    Util.logMessage("Site Info parser added META description: " + a.getAttribute(HTML.Attribute.CONTENT).toString(), Util.LOG_DEBUG);
+                }
+            }
+        }
+        
+        public void handleEndTag(HTML.Tag tag, int pos) {
+            if (tag.equals(HTML.Tag.TITLE)) {
+                parseTitle = false;
+                info.setMetaTitle(titleBuffer.toString());
+                Util.logMessage("Site Info parser: Stopped title parsing", Util.LOG_DEBUG);
+                Util.logMessage("Put title string " + titleBuffer, Util.LOG_DEBUG);
+            }
+        }
+        
+        public void handleText(char[] data, int pos) {
+            if (parseTitle) {
+                titleBuffer.append(data);
+            }
+        }
+        
+        public void handleSimpleTag(HTML.Tag tag, MutableAttributeSet a, int pos) {
+            if (tag.equals(HTML.Tag.A) && a.isDefined(HTML.Attribute.HREF)) {
+                String attrib = a.getAttribute(HTML.Attribute.HREF).toString().toLowerCase();
+                if (attrib.startsWith("http:")) {
+                    Util.logMessage("Site Info Parser: Added link to " + attrib, Util.LOG_MESSAGE);
+                    info.addLink(attrib);
+                } else if (attrib.startsWith("#")) {
+                    // Link to an internal anchor
+                    /* Uncomment if you really want to follow internal links
+                    String url = info.getUrl();
+                    int idx = url.indexOf("?");
+                    if (idx != -1) url = url.substring(0, idx);
+                    attrib = url + attrib; 
+                    info.addLink(attrib);
+                     */
+                    Util.logMessage("Site Info Parser: Internal link (ignored):" + attrib, Util.LOG_MESSAGE);
+                } else if (attrib.matches("^:.*(tml$|tml#.*)")) {
+                    // seems to be a relative link to another page.
+                    String url = info.getUrl();
+                    int idx = url.indexOf("?");
+                    if (idx != -1) url = url.substring(0,idx);
+                    if (url.endsWith("/")) {
+                        attrib = url + attrib;
+                    } else {
+                        attrib = url + "/" + attrib;
+                    }
+                    info.addLink(attrib);
+                    Util.logMessage("Site Info Parser: Constructed link from relative: " + attrib, Util.LOG_MESSAGE);
+                } else {
+                    Util.logMessage("Site Info Parser: Ignoring unknown link: " + attrib, Util.LOG_MESSAGE);
+                } 
+            }
+        }
+        
+    } // End of inner class InternalParserCallback
+    
 }
