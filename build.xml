@@ -34,4 +34,21 @@
             destdir="gilbert/javadoc/"
         />
     </target>
+
+    <target name="frontend_war" depends="extractor_jar">
+        <war warfile="gilbert/gilbert.war" webxml="gilbert/frontend/WEB-INF/web.xml">
+            <fileset dir="gilbert/frontend" includes="**/*.html" />
+            <fileset dir="gilbert/frontend" includes="**/*.jsp" />
+            <fileset dir="gilbert/frontend" includes="**/*.css" />
+            <lib dir="gilbert">
+                <include name="extractor.jar" />
+            </lib>
+            <lib dir="gilbert/thirdparty">
+                <include name="*.jar" />
+            </lib>
+            <classes dir="gilbert/extractor/servlet">
+                <include name="*.class" />
+            </classes>
+        </war>
+    </target>
 </project>
