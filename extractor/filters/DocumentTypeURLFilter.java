@@ -9,40 +9,46 @@ import gilbert.extractor.*;
 import java.util.*;
 
 /**
- * Filters unwanted document types. This will check the extension (== the
- * end of the URL name), since <code>URLConnection.getEncoding()</code> 
- * doesn't seem to work properly...
- * 
+ * Filters unwanted document types. This will now properly check the encoding
+ * supplied by the URLConnection, and use the Util class to allow caching.
+ *
  * @author  Daniel Hahn
  * @version CVS $Revision$
  */
 public class DocumentTypeURLFilter implements URLFilter {
-    /** Vector with endings for this filter. */
-    protected Vector endings;
+    /** Allowed document types for this filter. */
+    protected Vector types;
     
     /**
-     * Creates a new instance of DocumentTypeURLFilter. 
-     * @param endings List of endings that, when matched will
-     *        allow a url name to pass (e.g. ".html"). The
-     *        directory entry ("/") will always pass.
+     * Creates a new instance of DocumentTypeURLFilter.
      */
-    public DocumentTypeURLFilter(Vector endings) {
-        this.endings = endings;
+    public DocumentTypeURLFilter() {
+        types = new Vector();
     }
-
+    
+    /**
+     * Adds a new allowed document type. Failing to add types
+     * will result in all sites being rejected.
+     */
+    public void addDocumentType(String type) {
+        types.add(type);
+    }
+    
     /** Returns true if, and only if, the given url is accpeted by the filter.
      */
     public boolean accept(VisitorURL url) {
         String hostname = url.getProperty("url.name");
-        Enumeration urlList = endings.elements();
+        SiteInfo info = Util.siteStatus(hostname);
+        
+        Enumeration typeList = types.elements();
         boolean accepted = false;
-        while (urlList.hasMoreElements()) {
-            String current = (String) urlList.nextElement();
-            accepted = accepted || hostname.endsWith(current);
+        if (info.getContentType() != null) {
+            while (typeList.hasMoreElements()) {
+                accepted = accepted || info.getContentType().equals((String) typeList.nextElement());
+            }
         }
-        accepted = accepted || hostname.endsWith("/");
         if (!accepted) {
-            Util.logMessage("URL dropped by filter, unknown type: " + hostname, Util.LOG_MESSAGE);
+            Util.logMessage("URL dropped by filter, unknown type: " + info.getContentType(), Util.LOG_MESSAGE);
         }
         return accepted;
     }

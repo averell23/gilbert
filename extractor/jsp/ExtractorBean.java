@@ -55,10 +55,9 @@ public class ExtractorBean {
         extractor.setExtractor(ext);
         extractor.addRefiner(new SearchingRefiner(true, "ubicomp,handheld,context"));
         Refiner meta = new MetaRefiner();
-        Vector endingList = new Vector();
-        endingList.add("html");
-        endingList.add("htm");
-        meta.addPrefilter(new DocumentTypeURLFilter(endingList));
+        DocumentTypeURLFilter docFilter = new DocumentTypeURLFilter();
+        docFilter.addDocumentType("text/html");
+        meta.addPrefilter(docFilter);
         extractor.addRefiner(meta);
         endRef = new VectorRefiner();
         extractor.addRefiner(endRef);

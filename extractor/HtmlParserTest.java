@@ -43,6 +43,8 @@ public class HtmlParserTest {
             conn.setRequestMethod("GET");
             conn.setRequestProperty("User-Agent", "Mozilla/4.0 (compatible; MSIE 5.5; Windows NT 4.0");
             conn.connect();
+            System.out.println("Content encoding: " + conn.getContentEncoding());
+            System.out.println("Content type: " + conn.getContentType());
             DocumentParser parser = new DocumentParser(DTD.getDTD("HTML"));
             HTMLEditorKit.ParserCallback pc = new HTMLEditorKit.ParserCallback() {
                 public void handleStartTag(HTML.Tag tag, MutableAttributeSet a, int pos) {

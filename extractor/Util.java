@@ -45,10 +45,15 @@ public class Util {
     public static final int LOG_ERROR = 1;
     /// Current logging level
     protected static int logLevel = LOG_NORMAL;
-    /// Cache for live domains
-    protected static Hashtable liveCache = new Hashtable();
+    /// Cache for site status of different urls...
+    protected static Hashtable siteCache = new Hashtable();
     /// Timeout for live cache entries in seconds.
-    protected static int liveCacheTimeout = 5 * 60 * 60; // 5 hours should do...
+    protected static int siteCacheTimeout = 5 * 60 * 60; // 5 hours should do...
+    /// Last cleanup of the siteCache
+    protected static long cacheTimestamp = System.currentTimeMillis();
+    /// Inteverval for cach cleanups in minutes
+    protected static int cleanupInterval = 15; // Thrice the time of the cache timeout
+    
     
     /**
      * Returns whether the given string has an IP Adress format or a
@@ -65,53 +70,57 @@ public class Util {
             return HOST_NAME;
         }
     }
-    
     /**
-     * Check if the given URL is alive. <i>Alive</i> means that an
-     * Http server responds to a HEAD request with a non-errorcode.
+     * Check if the given URL is alive.
+     * @deprecated Has been replaced with { @link #siteStatus(String) }
      */
     public static boolean isAlive(String host) {
-        Util.logMessage("Checking if host is alive: " + host, Util.LOG_MESSAGE);
+        return siteStatus("http://" + host + "/").getAlive();
+    }
+    
+    /**
+     * Check the status of the give web site. This will return a
+     * <code>SiteInfo</code> object containig the status.
+     */
+    public static SiteInfo siteStatus(String urlStr) {
+        Util.logMessage("Checking site status for url: " + urlStr, Util.LOG_MESSAGE);
         URL u = null;
         HttpURLConnection conn = null;
-        host = "http://" + host + "/";
         
-        // try the cache first
-        int cReply = checkLiveCache(host);
-        if (cReply != -1) {
-            if (cReply == 1) {
-                Util.logMessage("Cached entry: Host is alive", Util.LOG_MESSAGE);
-                return true;
-            } else {
-                Util.logMessage("Cached entry: Host is not alive", Util.LOG_MESSAGE);
-                return false;
-            }
-        }
+        // check the cache
+        SiteInfo retVal = checkSiteCache(urlStr);
         
-        try {
-            u = new URL(host);
-            conn = (HttpURLConnection) u.openConnection();
-            conn.setRequestMethod("HEAD");
-            conn.connect();
-            int resCode = conn.getResponseCode();
-            Util.logMessage("Got return code: " + resCode, Util.LOG_DEBUG);
-            conn.disconnect();
-            if (resCode >= 400) { // If the code is not an ok or redirect
-                Util.logMessage("Host was not alive", Util.LOG_MESSAGE);
-                addCacheEntry(host, false);
-                return false;
+        if (retVal == null) {
+            Util.logMessage("No cache entry: Creating site status for: " + urlStr, Util.LOG_MESSAGE);
+            retVal = new SiteInfo(urlStr);
+            try {
+                u = new URL(urlStr);
+                conn = (HttpURLConnection) u.openConnection();
+                conn.setRequestMethod("HEAD");
+                conn.connect();
+                int resCode = conn.getResponseCode();
+                Util.logMessage("Got return code: " + resCode, Util.LOG_DEBUG);
+                String contentType = conn.getContentType();
+                Util.logMessage("Got content type: " + contentType, Util.LOG_DEBUG);
+                retVal.setContentType(contentType);
+                conn.disconnect();
+                if (resCode >= 400) { // If the code is not an ok or redirect
+                    Util.logMessage("Host was not alive", Util.LOG_MESSAGE);
+                    retVal.setAlive(false);
+                } else {
+                    Util.logMessage("Host found alive", Util.LOG_MESSAGE);
+                    retVal.setAlive(true);
+                }
+            } catch (MalformedURLException e) {
+                logMessage(urlStr + " is not a valid URL.", LOG_WARN);
+                retVal.setAlive(false);
+            } catch (IOException e) {
+                Util.logMessage("IOException checking for host status: " + e.getMessage(), Util.LOG_MESSAGE);
+                retVal.setAlive(false);
             }
-        } catch (MalformedURLException e) {
-            logMessage(host + " is not a valid URL.", LOG_WARN);
-            return false;
-        } catch (IOException e) {
-            Util.logMessage("IOException checking if host was alive: " + e.getMessage(), Util.LOG_MESSAGE);
-            addCacheEntry(host, false); // This only makes sense when using a proxy!
-            return false;
+            addCacheEntry(retVal);
         }
-        Util.logMessage("Host was alive", Util.LOG_MESSAGE);
-        addCacheEntry(host, true);
-        return true;
+        return retVal;
     }
     
     /**
@@ -137,6 +146,7 @@ public class Util {
      */
     public static void logMessage(String message, int severity) {
         if (severity <= logLevel) {
+            message = "[" + dateToString(System.currentTimeMillis()) + "] " + message;
             logStream.println(message);
         }
     }
@@ -167,43 +177,58 @@ public class Util {
      * Adds a host to the liveCache.
      * @param alive Indicates if the host is alive or not.
      */
-    protected static void addCacheEntry(String host, boolean alive) {
-        if (alive) {
-            liveCache.put(host, new Long(System.currentTimeMillis()));
-        } else {
-            liveCache.put(host, new Long(- System.currentTimeMillis()));
-        }
+    protected static void addCacheEntry(SiteInfo status) {
+        cleanupSiteCache();
+        siteCache.put(status.getUrl(), status);
     }
     
     /**
      * Convenience method to get at peek at the cache.
      */
-    public static Hashtable getLiveCache() {
-        return liveCache;
+    public static Hashtable geSiteCache() {
+        return siteCache;
     }
-        
+    
     
     /**
-     * Checks the given host against the live host cache.
-     * @return int This value is 0 for a dead host, 1 for a live host
-     *             and -1 for a non-existent/invalid cache entry.
+     * Checks the given host against the site cache.
+     *
+     * @return SiteInfo This retuns the <code>SiteInfo</code> object
+     *                  of the host, or null if there is no cache entry.
      */
-    protected static int checkLiveCache(String host) {
-        if (!liveCache.containsKey(host)) {
-            return -1;
-        } else {
-            Long tStamp = (Long) liveCache.get(host);
-            long tStampReal = tStamp.longValue();
-            if ((Math.abs(tStampReal) + (liveCacheTimeout * 1000)) < System.currentTimeMillis()) {
-                liveCache.remove(host);
-                return -1;
+    protected static SiteInfo checkSiteCache(String host) {
+        SiteInfo retval = null;
+        
+        if (siteCache.containsKey(host)) {
+            SiteInfo current = (SiteInfo) siteCache.get(host);
+            if ((current.getTimestamp() + (siteCacheTimeout * 1000)) < System.currentTimeMillis()) {
+                siteCache.remove(host); // Lazy cleanup
             } else {
-                if (tStampReal > 0) {
-                    return 1;
-                } else {
-                    return 0;
+                Util.logMessage("Found valid cache entry for host: " + host, Util.LOG_MESSAGE);
+                retval = current;
+            }
+        }
+        cleanupSiteCache();
+        return retval;
+    }
+    
+    /**
+     * Cleans up zombie entries from the cache.
+     */
+    protected static void cleanupSiteCache() {
+        if  ((cacheTimestamp + (cleanupInterval * 60000)) < System.currentTimeMillis()) {
+            Util.logMessage("Util: Cleaning up site cache. (" + siteCache.size() + "entries)", Util.LOG_MESSAGE);
+            Enumeration keys = siteCache.keys();
+            while (keys.hasMoreElements()) {
+                String key = (String) keys.nextElement();
+                SiteInfo current = (SiteInfo) siteCache.get(key);
+                if ((current.getTimestamp() + (siteCacheTimeout * 1000)) < System.currentTimeMillis()) {
+                    siteCache.remove(key);
+                    Util.logMessage("Util: Stale cache entry removed: " + key, Util.LOG_DEBUG);
                 }
             }
+            cacheTimestamp = System.currentTimeMillis();
+            Util.logMessage("Util: Cache cleanup complete.", Util.LOG_MESSAGE);
         }
     }
 }

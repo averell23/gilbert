@@ -52,11 +52,11 @@ public class MetaRefiner extends Refiner {
                 conn.connect();
                 DocumentParser parser = new DocumentParser(DTD.getDTD("HTML"));
                 HTMLEditorKit.ParserCallback pc = new InternalParserCallback();
-                String encoding = conn.getContentEncoding();
-                if (!(urlName.endsWith("html") || urlName.endsWith("htm"))) { 
+                String encoding = conn.getContentType();
+                if ((encoding != null) && encoding.equals("text/html")) { 
                     parser.parse(new InputStreamReader(conn.getInputStream()), pc, true);
                 } else {
-                    Util.logMessage("Meta Refiner: Ignored URL with unknown type: " + urlName, Util.LOG_MESSAGE);
+                    Util.logMessage("Meta Refiner: Ignored URL with unknown type: " + encoding + "(" + urlName + ")", Util.LOG_MESSAGE);
                 }
                 conn.disconnect();
             } catch (MalformedURLException e) {

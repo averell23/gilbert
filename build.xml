@@ -14,7 +14,11 @@
     </target>
 
     <target name="extractor_classes" depends="init">
-        <javac srcdir="." includes="gilbert/extractor/**" classpath="." />
+        <javac srcdir="." 
+               includes="gilbert/extractor/**" 
+               classpath="."
+               deprecation="on"
+         />
     </target>
 
     <target name="extractor_jar" depends="extractor_classes">

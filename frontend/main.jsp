@@ -16,20 +16,26 @@
 </jsp:useBean>
     <%
         String turnPar = request.getParameter("reload");
+        String sid = request.getSession(false).getId();
         if (turnPar != null) {
             if (turnPar.equals("on")) {
                 state.setAutoReload(true);
+                // Util.logMessage("[User event, sid: " + sid + "] User turned reload on.", Util.LOG_ERROR);
             } else if (turnPar.equals("off")) {
                 state.setAutoReload(false);
+                Util.logMessage("[User event, sid: " + sid + "] User turned reload off.", Util.LOG_ERROR);
             } else if (turnPar.equals("help")) {
                 state.setAutoReload(false);
                 selUrl = "help.html";
+                Util.logMessage("[User event, sid: " + sid + "] User called help page.", Util.LOG_ERROR);
             } else if (turnPar.equals("admin")) {
                 state.setAutoReload(false);
                 selUrl = "admin.jsp";
+                Util.logMessage("[User event, sid: " + sid + "] User called admin page.", Util.LOG_ERROR);
             } else if (turnPar.equals("site")) {
                 state.setAutoReload(false);
                 selUrl = request.getParameter("url");
+                Util.logMessage("[User event, sid: " + sid + "] User called site: " + request.getParameter("url"), Util.LOG_ERROR);
             }
         } else {
             state.setAutoReload(true);
@@ -42,7 +48,7 @@
             Vector extractedURLs = extractor.getUrls();
             int selection = (int) (Math.random() * (extractedURLs.size() - 1));
             selUrl = ((Properties) extractedURLs.get(selection)).getProperty("url.name");
-            Util.logMessage("Update cycle selected: " + selUrl, Util.LOG_MESSAGE);
+            Util.logMessage("Update cycle selected: " + selUrl, Util.LOG_DEBUG);
         }
     %>
 
