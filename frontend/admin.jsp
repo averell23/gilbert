@@ -76,6 +76,10 @@
                 <li>Is Alive: <%=currentSite.getAlive()%></li>
                 <li>Content Type: <%=currentSite.getContentType()%></li>
                 <li>Timestamp: <%=currentSite.getTimestamp()%> (<%=Util.dateToString(currentSite.getTimestamp())%>)</li>
+                <li>Meta Title: <%=currentSite.getMetaTitle()%></li>
+                <li>Meta Description: <%=currentSite.getMetaDescription()%></li>
+                <li>Number of META Keywords: <%=currentSite.getMetaKeywords().size()%></li>
+                <li>Number of Links: <%=currentSite.getLinks().size()%></li>
             </ul>
         </li>
     <%}%>
