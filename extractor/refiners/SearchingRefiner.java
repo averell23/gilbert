@@ -11,8 +11,8 @@ import org.xml.sax.*;
 import gilbert.extractor.*;
 
 /**
- * This takes a existing list of URLs and searches their domains
- * for some pre-defined keywords.
+ * This takes a existing list of URLs and searches the web for pages with
+ * predefined keywords and the same language.
  *
  * @author  Daniel Hahn
  * @version CVS $Revision$
@@ -26,6 +26,8 @@ public class SearchingRefiner extends Refiner {
     WebSearch mySearch;
     /** Track the domains that have already been refined */
     protected Hashtable refHash;
+    /** The languages for this search */
+    protected String langStr;
     
     /**
      * Creates a new instance of SearchingRefiner.
@@ -35,6 +37,7 @@ public class SearchingRefiner extends Refiner {
      * @param keywordList A comma-separated list of keywords.
      */
     public SearchingRefiner(boolean passing, String keywordList) {
+        super();
         // initialize the search Object
         mySearch = new GoogleSearch();
         sProps = new Properties();
@@ -42,9 +45,25 @@ public class SearchingRefiner extends Refiner {
         sProps.setProperty("search.keywords", keywordList);
     }
     
+    /**
+     * Creates a new instance of SearchingRefiner. The "passing"
+     * property will be set to true.
+     */
+    public SearchingRefiner(String keywordList) {
+        this(true, keywordList);
+    }
+    
     public void refine(InputSource input) {
         refHash = new Hashtable();
         super.refine(input);
+    }
+    
+    /**
+     * Sets the languages for the search. This should be a comma-separated
+     * list of language codes.
+     */
+    public void setLangStr(String languages) {
+        langStr = languages;
     }
     
     public void refine(String uri) {
