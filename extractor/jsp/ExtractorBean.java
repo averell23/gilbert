@@ -112,8 +112,8 @@ public class ExtractorBean {
      */
     public void update() throws IOException { 
         /* Calculate the real time out. Take into account the failures for backoff time. */
-        long realTimeout = (failures == 0)?timeOut:(timeOut * (long) ((failures - 1) * 0.25));
-        Util.logMessage("Real timeout calculated to: " + (realTimeout / 1000), Util.LOG_MESSAGE);
+        long realTimeout = (failures == 0)?timeOut:((long) (timeOut * ((failures - 1) * 0.25)));
+        Util.logMessage("Real timeout calculated to: " + (realTimeout / 1000), Util.LOG_DEBUG);
         if ((timestamp + realTimeout) < System.currentTimeMillis()) {
             if (failures != 0) {
                 Util.logMessage("Last extraction failed, retry no. " + failures
