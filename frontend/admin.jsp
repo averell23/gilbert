@@ -66,10 +66,10 @@
     Contentes of the siteCache:
     <ul>
     <%
-        Hashtable liveKeys = Util.geSiteCache(); %>
-<%--
+        Hashtable liveKeys = Util.geSiteCache(); 
         Enumeration liveKeysL = liveKeys.keys();
-        while (liveKeysL.hasMoreElements()) {
+%>
+<%--        while (liveKeysL.hasMoreElements()) {
             SiteInfo currentSite = (SiteInfo) liveKeysL.nextElement();
     %>
         <li><%=currentSite.getUrl()%>
