@@ -55,6 +55,9 @@
             <classes dir="gilbert/extractor/servlet">
                 <include name="*.class" />
             </classes>
+            <classes dir="gilbert/extractor">
+                <include name="log4j.properties" />
+            </classes>
         </war>
     </target>
     <target name="revision" depends="init">
