@@ -97,6 +97,7 @@ public abstract class AbstractTransmutor {
         if (c > 159) {
             int cVal = c;
             outStream.print("&#" + cVal + ";");
+            return;
         }
         
         switch (c) {
