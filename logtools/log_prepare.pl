@@ -41,6 +41,7 @@ while (<LOGFILE>) {
 	$user_agent = $line[8];
 	$document = $line[9];
 	$timestamp = $line[3];
+        $resultcode = $line[5];
 	$document =~ s/[^a-zA-Z_0-9:\/\-\.~]//g; # Squasch control characters
 	# Try to lookup the client's real name
 	# This can be left out if the log contains proper hostnames...
@@ -63,6 +64,11 @@ while (<LOGFILE>) {
 	$writer->startTag("visit");
 	$writer->dataElement("type", "Html");
 	$writer->dataElement("timestamp", $timestamp);
+        if (defined($resultcode) && ($resultcode < 300)) {
+            $writer->dataElement("result", "success");
+        } else {
+            $writer->dataElement("result", "failure");
+        }
 	$writer->startTag("visitor");
 	if ($local) {
 		$writer->dataElement("class", "local");
