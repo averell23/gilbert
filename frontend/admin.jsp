@@ -63,6 +63,7 @@
     </ul>
     </p>
     <p>
+    <%--
     Contentes of the siteCache:
     <ul>
     <%
@@ -80,6 +81,7 @@
         </li>
     <%}%>
     </ul>
+--%>
     </p>
 </body>
 </html>
