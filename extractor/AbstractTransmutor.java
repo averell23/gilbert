@@ -137,4 +137,8 @@ public abstract class AbstractTransmutor {
         
     } // normalizeAndPrint(char)
     
+   public String toString() {
+       return this.getClass().getName();
+   }
+   
 }
