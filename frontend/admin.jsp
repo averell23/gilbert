@@ -63,15 +63,21 @@
     </ul>
     </p>
     <p>
-    Contentes of the Hoste liveCache:
+    Contentes of the siteCache:
     <ul>
     <%
-        Hashtable liveKeys = Util.getLiveCache();
+        Hashtable liveKeys = Util.geSiteCache();
         Enumeration liveKeysL = liveKeys.keys();
         while (liveKeysL.hasMoreElements()) {
-            String currentSite = (String) liveKeysL.nextElement();
+            SiteInfo currentSite = (SiteInfo) liveKeysL.nextElement();
     %>
-        <li><%=currentSite%> - <%=liveKeys.get(currentSite)%></li>
+        <li><%=currentSite.getUrl()%>
+            <ul>
+                <li>Is Alive: <%=currentSite.getAlive()%></li>
+                <li>Content Type: <%=currentSite.getContentType()%></li>
+                <li>Timestamp: <%=currentSite.getTimestamp()%> (<%=Util.dateToString(currentSite.getTimestamp())%>)</li>
+            </ul>
+        </li>
     <%}%>
     </ul>
     </p>
