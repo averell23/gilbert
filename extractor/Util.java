@@ -157,7 +157,7 @@ public class Util {
         currentDate.append(" ");
         currentDate.append(cal.get(Calendar.DAY_OF_MONTH));
         currentDate.append(".");
-        currentDate.append(cal.get(Calendar.MONTH));
+        currentDate.append(cal.get(Calendar.MONTH) + 1);
         currentDate.append(".");
         currentDate.append(cal.get(Calendar.YEAR));
         return currentDate.toString();

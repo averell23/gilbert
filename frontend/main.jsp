@@ -16,13 +16,25 @@
 </jsp:useBean>
     <%
         String turnPar = request.getParameter("reload");
-        if ((turnPar != null) && turnPar.equals("off")) {
-            state.setAutoReload(false);
-        }
-        if ((turnPar != null) && turnPar.equals("on")) {
+        if (turnPar != null) {
+            if (turnPar.equals("on")) {
+                state.setAutoReload(true);
+            } else if (turnPar.equals("off")) {
+                state.setAutoReload(false);
+            } else if (turnPar.equals("help")) {
+                state.setAutoReload(false);
+                selUrl = "help.html";
+            } else if (turnPar.equals("admin")) {
+                state.setAutoReload(false);
+                selUrl = "admin.jsp";
+            } else if (turnPar.equals("site")) {
+                state.setAutoReload(false);
+                selUrl = request.getParameter("url");
+            }
+        } else {
             state.setAutoReload(true);
         }
-        if ((turnPar == null) || turnPar.equals("")) { // Should preserve state when switching...
+        if ((turnPar == null) || (!turnPar.equals("off"))) { // Should preserve state when switching reload off...
             // set the base URI for the state
             state.setBaseURI(request.getRequestURI());
             // select a new URL to show
@@ -30,7 +42,7 @@
             Vector extractedURLs = extractor.getUrls();
             int selection = (int) (Math.random() * (extractedURLs.size() - 1));
             selUrl = ((Properties) extractedURLs.get(selection)).getProperty("url.name");
-            Util.logMessage("Update cycle selected: " + selUrl, Util.LOG_DEBUG);
+            Util.logMessage("Update cycle selected: " + selUrl, Util.LOG_MESSAGE);
         }
     %>
 
