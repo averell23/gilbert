@@ -5,6 +5,7 @@
  */
 
 package gilbert.extractor;
+import java.util.*;
 
 /**
  *
@@ -26,8 +27,12 @@ public class RefinerTest {
             System.exit(1);
         }
         // Util.setLogLevel(Util.LOG_DEBUG);
-        Refiner x = new SearchingRefiner(false, "ubicomp,handheld");
+        VectorRefiner x = new VectorRefiner();
         x.refine(args[0]);
+        Enumeration e = x.getUrlList().elements();
+        while (e.hasMoreElements()) {
+            System.out.println(e.nextElement());
+        }
     }
 
 }

@@ -39,7 +39,7 @@ public class Util {
     /// Code for normal operation log level
     public static final int LOG_NORMAL = 3;
     /// Code for "error" log level
-    public static final int LOG_ERRROR = 1;
+    public static final int LOG_ERROR = 1;
     /// Current logging level
     protected static int logLevel = LOG_NORMAL;
     
@@ -89,7 +89,7 @@ public class Util {
                 return false;
             }
         } catch (MalformedURLException e) {
-            logMessage(host + " is not a valid URL.", LOG_ERRROR);
+            logMessage(host + " is not a valid URL.", LOG_ERROR);
             return false;
         } catch (IOException e) {
             Util.logMessage("", Util.LOG_DEBUG);
@@ -123,5 +123,27 @@ public class Util {
         if (severity <= logLevel) {
             logStream.println(message);
         }
+    }
+    
+    /**
+     * Converts the given system time (in milliseconds) to 
+     * a printable date String.
+     */
+    public static String dateToString(long millis) {
+        Calendar cal = new GregorianCalendar();
+        cal.setTimeInMillis(millis);
+        StringBuffer currentDate = new StringBuffer();
+        currentDate.append(cal.get(Calendar.HOUR_OF_DAY));
+        currentDate.append(":");
+        currentDate.append(cal.get(Calendar.MINUTE));
+        currentDate.append(":");
+        currentDate.append(cal.get(Calendar.SECOND));
+        currentDate.append(" ");
+        currentDate.append(cal.get(Calendar.DAY_OF_MONTH));
+        currentDate.append(".");
+        currentDate.append(cal.get(Calendar.MONTH));
+        currentDate.append(".");
+        currentDate.append(cal.get(Calendar.YEAR));
+        return currentDate.toString();
     }
 }

@@ -1,0 +1,32 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Frameset//EN"
+ "http://www.w3.org/TR/html4/frameset.dtd">
+
+<html>
+  <head>
+    <title>Test Page</title>
+  </head>
+  <script language="JavaScript">
+    var myTimer = setTimeout("reloadFrame()", 50000);
+
+    function reloadFrame() {
+        var redirURL = "http://127.0.0.1:8180/gilbert/servlet/RedirectingServlet";
+        redirURL += "?dummy=";
+        redirURL += theDate.getTime().toString(10);
+        parent.frames[0].frames[1].location.replace(redirURL);
+        window.reload();
+        myTimer = setTimeout("reloadFrame()", 50000);
+    }
+    
+    function showAlert() {
+        alert("Frame was clicked!");
+    }
+  </script>
+  <frameset ROWS="80%, 20%">
+    <frameset COLS="20%, 80%">
+        <frame SRC="left_part.html" NAME="left" />
+        <frame SRC="http://127.0.0.1:8180/gilbert/servlet/RedirectingServlet" onFocus="showAlert()" />
+    </frameset>
+    <frame SRC="bottom_part.html" NAME="bottom" />
+    <noframes>Your browser doesn't support frames. Guess you already knew that?</noframes>
+  </frameset>
+</html>

@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+
+<project name="gilbert" basedir=".." default="all">
+    <target name="init">
+        <tstamp/>
+    </target>
+
+    <target name="extractor_clean" depends="init">
+        <delete>
+            <fileset dir="gilbert/extractor" includes="**/*.class" />
+            <fileset dir="gilbert/extractor" includes="**/*~" />
+        </delete>
+    </target>
+
+    <target name="extractor_classes" depends="init">
+        <javac srcdir="." includes="gilbert/extractor/**" classpath="." />
+    </target>
+
+    <target name="extractor_jar" depends="extractor_classes">
+        <jar jarfile="gilbert/extractor.jar" 
+             basedir="." 
+             includes="gilbert/extractor/**/*.class"
+             excludes="gilbert/extractor/**/*Test*,gilbert/extractor/servlet/**"
+        />
+    </target>
+
+    <target name="extractor_doc" depends="init">
+        <mkdir dir="gilbert/javadoc"/>
+        <javadoc packagenames="gilbert.extractor.*"
+            sourcepath="."
+            private="True"
+            author="True"
+            version="True"
+            destdir="gilbert/javadoc/"
+        />
+    </target>
+</project>

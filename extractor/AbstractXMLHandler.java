@@ -75,12 +75,12 @@ implements org.xml.sax.ContentHandler, org.xml.sax.ErrorHandler {
     }
     
     public void error(org.xml.sax.SAXParseException e) throws org.xml.sax.SAXException {
-        Util.logMessage("XML error (recoverable) in line: " + e.getLineNumber(), Util.LOG_ERRROR);
-        Util.logMessage("Exception was: " + e.getMessage(), Util.LOG_ERRROR);
+        Util.logMessage("XML error (recoverable) in line: " + e.getLineNumber(), Util.LOG_ERROR);
+        Util.logMessage("Exception was: " + e.getMessage(), Util.LOG_ERROR);
     }
     
     public void fatalError(org.xml.sax.SAXParseException e) throws org.xml.sax.SAXException {
-        Util.logMessage("XML fatal error in line: " + e.getLineNumber(), Util.LOG_ERRROR);
+        Util.logMessage("XML fatal error in line: " + e.getLineNumber(), Util.LOG_ERROR);
         e.printStackTrace();
         throw(new org.xml.sax.SAXException(e.getMessage()));
     }

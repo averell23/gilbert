@@ -66,6 +66,7 @@ public class SearchingRefiner extends Refiner {
             tURL = new URL(urlStr);
             String hostStr = tURL.getHost();
             Util.logMessage("Refiner: Found host name: " + hostStr, Util.LOG_DEBUG);
+            
             String[] parts = hostStr.split("\\.");
             if ((parts == null) || (parts.length == 0)) {
                 System.err.println("Error splitting hostname");
@@ -91,7 +92,7 @@ public class SearchingRefiner extends Refiner {
                 }
             }
         } catch(MalformedURLException e) {
-            System.err.println("Source URL malformed: " + urlStr);
+            Util.logMessage("Source URL malformed: " + urlStr, Util.LOG_ERROR);
         }
         if (keepOriginal) {
             startTag("url");
