@@ -32,8 +32,8 @@
         src="pics/start.gif" alt="start"
     <%}%></a>
     <h2>Internal</h2>
-    <a href="<%=state.getBaseURI()%>?reload=help">Help page</a>
-    <a href="<%=state.getBaseURI()%>?reload=admin">Admin Information</a>
+    <a href="<%=state.getBaseURI()%>?reload=help" target="_parent">Help page</a>
+    <a href="<%=state.getBaseURI()%>?reload=admin" target="_parent">Admin Information</a>
     <h2>Other sites</h2>
     <%
         Vector curSites = extractor.getUrls();
@@ -48,7 +48,7 @@
             } catch (MalformedURLException e) {
                 Util.logMessage("Encountered malformed URL: " + curSite, Util.LOG_MESSAGE);
             }
-            out.print("<a href=\"" + state.getBaseURI() + "?reload=site&url=" + curSite + "\" target=\"right\">");
+            out.print("<a href=\"" + state.getBaseURI() + "?reload=site&url=" + curSite + "\" target=\"_parent\">");
             out.print(siteName);
             out.println("</a><br>");
         }    
