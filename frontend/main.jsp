@@ -1,6 +1,11 @@
 <%@page contentType="text/html"%>
 <%@page import="java.util.*" %>
 <%@page import="gilbert.extractor.*" %>
+<%!
+    // Global definitions
+    /** String that contains the page which is showed on the left side. */
+    String selUrl = "nothing.html";
+%>
 
 <jsp:useBean id="extractor" scope="session" class="gilbert.extractor.jsp.ExtractorBean">
 <jsp:setProperty name="extractor"  property="dataSource" value="http://ubicomp.lancs.ac.uk/~dhahn/cgi-bin/weblog.pl" />
@@ -10,32 +15,42 @@
 <jsp:setProperty name="state" property="reloadFrequency" value="10" />
 </jsp:useBean>
     <%
-        // set the base URI for the state
-        state.setBaseURI(request.getRequestURI());
-        // select a new URL to show
-        extractor.update();
-        Vector extractedURLs = extractor.getUrls();
-        int selection = (int) (Math.random() * (extractedURLs.size() - 1));
-        String selUrl = ((Properties) extractedURLs.get(selection)).getProperty("url.name");
+        String turnPar = request.getParameter("reload");
+        if ((turnPar != null) && turnPar.equals("off")) {
+            state.setAutoReload(false);
+        }
+        if ((turnPar != null) && turnPar.equals("on")) {
+            state.setAutoReload(true);
+        }
+        if ((turnPar == null) || turnPar.equals("")) { // Should preserve state when switching...
+            // set the base URI for the state
+            state.setBaseURI(request.getRequestURI());
+            // select a new URL to show
+            extractor.update();
+            Vector extractedURLs = extractor.getUrls();
+            int selection = (int) (Math.random() * (extractedURLs.size() - 1));
+            selUrl = ((Properties) extractedURLs.get(selection)).getProperty("url.name");
+        }
     %>
 
 <html>
 <head>
 <title>Guest Viewer</title>
 <%
-    String turnPar = request.getParameter("reload");
-    if ((turnPar != null) && turnPar.equals("off")) {
-        state.setAutoReload(false);
-    }
-    if ((turnPar != null) && turnPar.equals("on")) {
-        state.setAutoReload(true);
-    }
     // Insert the META header, if the state says the page should be refreshed...
+    
+    out.print("<meta http-equiv=\"refresh\" ");
+    out.print("content=\"");
     if (state.getAutoReload()) {
-        out.print("<meta http-equiv=\"refresh\" ");
-        out.print("content=\"" + state.getReloadFrequency());
-        out.println("; URL=\"" + state.getBaseURI() + "\"/>");
+        out.print(state.getReloadFrequency());
+    } else { 
+        out.print("1800");
     }
+    out.print("; URL=\"" + state.getBaseURI());
+    if (!state.getAutoReload()) {
+        out.print("?reload=on");
+    }
+    out.println("\"/>");
 %>
 </head>
 
