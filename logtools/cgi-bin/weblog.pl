@@ -16,7 +16,7 @@ use Socket;
 @local_domain = ("lancs.ac.uk");
 %tld_hash = ( );
 %tld_code_hash = ( );
-$COUNTRY_CODES_NAME = "country-codes.txt";
+$COUNTRY_CODES_NAME = "../country-codes.txt";
 
 $LOGFILE_MODE = "COMBINED"; # change to the real mode of your logfile
                             # see Utils.pm for mode definitions
@@ -56,6 +56,7 @@ while (<LOGFILE>) {
 	$user_agent = $line[8];
 	$document = $line[9];
 	$timestamp = $line[3];
+        $resultcode = $line[5];
 	$document =~ s/[^a-zA-Z_0-9:\/\-\.~]//g; # Squasch control characters
 	# Try to lookup the client's real name
 	# This can be left out if the log contains proper hostnames...
@@ -76,6 +77,11 @@ while (<LOGFILE>) {
 	$writer->startTag("visit");
 	$writer->dataElement("type", "Html");
 	$writer->dataElement("timestamp", $timestamp);
+        if (defined($resultcode) && ($resultcode < 300)) {
+            $writer->dataElement("result", "success");
+        } else {
+            $writer->dataElement("result", "failure");
+        }
 	$writer->startTag("visitor");
 	if ($local) {
 		$writer->dataElement("class", "local");
