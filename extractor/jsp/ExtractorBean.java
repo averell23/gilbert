@@ -106,6 +106,7 @@ public class ExtractorBean {
      */
     public void update() throws IOException { 
         if ((timestamp + timeOut) < System.currentTimeMillis()) {
+            endRef.reset();
             extractor.extract();
             Vector tmpSet = endRef.getUrlList();
             if (tmpSet.size() != 0) {
