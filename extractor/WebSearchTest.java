@@ -32,7 +32,8 @@ public class WebSearchTest {
         }
         Properties parms = new Properties();
         parms.setProperty("search.keywords", keystring);
-        parms.setProperty("search.domains", "at");
+        parms.setProperty("search.languages", "en,de");
+        parms.setProperty("search.domains", ".jp");
         parms.setProperty("search.resultcount", "50");
         System.out.println("Search with keywords:" + keystring);
         WebSearch testSearch = new GoogleSearch();
