@@ -30,6 +30,7 @@ public class MetaRefiner extends Refiner {
     /** Creates a new instance of MetaRefiner */
     public MetaRefiner() {
         requestCache = new Hashtable();
+        passing = true;
     }
     
     /**
@@ -66,7 +67,6 @@ public class MetaRefiner extends Refiner {
             }
             requestCache.put(urlName, url);
         }
-        printURL(url);
     }
     
     /**

@@ -20,8 +20,6 @@ import gilbert.extractor.*;
 public class SearchingRefiner extends Refiner {
     /** Keywords that will be used for the search */
     protected String keywordList;
-    /** Wether to always include the original URLs */
-    protected boolean keepOriginal;
     /** The search Properties */
     protected Properties sProps;
     /** The search object */
@@ -31,15 +29,16 @@ public class SearchingRefiner extends Refiner {
     
     /**
      * Creates a new instance of SearchingRefiner.
-     * @param keepOriginal If true, the original URL will always be in
-     *                     the output.
+     * @param passing Set to false if you don't want the original URL
+     *                in the output. This would be an unexpected
+     *                behaviour, but there may be reasons for this.
      * @param keywordList A comma-separated list of keywords.
      */
-    public SearchingRefiner(boolean keepOriginal, String keywordList) {
+    public SearchingRefiner(boolean passing, String keywordList) {
         // initialize the search Object
         mySearch = new GoogleSearch();
         sProps = new Properties();
-        this.keepOriginal = keepOriginal;
+        this.passing = passing;
         sProps.setProperty("search.keywords", keywordList);
     }
     
@@ -61,6 +60,13 @@ public class SearchingRefiner extends Refiner {
      */
     public void handleURL(VisitorURL url) {
         Util.logMessage("Refiner: Handling new URL", Util.LOG_DEBUG);
+        int degree = 0;
+        try {
+            degree = Integer.valueOf(url.getProperty("url.degree")).intValue();
+        } catch (NumberFormatException e) {
+            Util.logMessage("SearchingRefiner: Could not determine degree : " + e.getMessage(), Util.LOG_ERROR);
+        }
+        Util.logMessage("SearchingRefiner: Url has degree " + degree, Util.LOG_MESSAGE);
         String urlStr = url.getProperty("url.name");
         URL tURL = null;
         try {
@@ -87,6 +93,7 @@ public class SearchingRefiner extends Refiner {
                     if (!refHash.containsKey(curUrlStr)) {
                         startTag("url");
                         printTag("name", curUrlStr);
+                        printTag("degree", "" + (degree + 1));
                         endTag("url");
                         refHash.put(curUrlStr, "refined");
                     }
@@ -94,9 +101,6 @@ public class SearchingRefiner extends Refiner {
             }
         } catch(MalformedURLException e) {
             Util.logMessage("Source URL malformed: " + urlStr, Util.LOG_ERROR);
-        }
-        if (keepOriginal) {
-            printURL(url);
         }
         Util.logMessage("Refiner: Url handler finished.", Util.LOG_DEBUG);
     }

@@ -18,6 +18,7 @@ public class DumpRefiner extends Refiner {
 
     /** Creates new DumpRefiner */
     public DumpRefiner() {
+        passing = false;
     }
 
     /**

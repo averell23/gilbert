@@ -40,9 +40,6 @@ public abstract class Refiner extends AbstractTransmutor {
     /// Indicates if prefiltering is on
     protected boolean prefiltering = false;
     /// Vector containing the postfilters
-    protected Vector postfilters;
-    /// Indicates if postfiltering is off
-    protected boolean postfiltering = false;
     /// Maximum degree of relationship for incoming URLs. (0 is unbounded).
     protected int maxDegree = 0;
     /*
@@ -60,7 +57,6 @@ public abstract class Refiner extends AbstractTransmutor {
     /** Creates new Refiner */
     public Refiner() {
         prefilters = new Vector();
-        postfilters = new Vector();
         try {
             parser = XMLReaderFactory.createXMLReader("org.apache.xerces.parsers.SAXParser");
             UrlXMLHandler tHandler = new UrlXMLHandler(this);
@@ -103,17 +99,6 @@ public abstract class Refiner extends AbstractTransmutor {
         }
     }
     
-    /**
-     * Adds a postfilter to the Extractor. Postfilters should be honoured
-     * by the child classes, but this may not always be the case.
-     */
-    public void addPostfilter(URLFilter filter) {
-        if (filter != null) {
-            postfiltering = true;
-            postfilters.add(filter);
-            Util.logMessage("Added postfilter: " + filter.getClass().getName(), Util.LOG_MESSAGE);
-        }
-    }
     
     /**
      * This starts the refining process. This method will only start the
@@ -172,8 +157,12 @@ public abstract class Refiner extends AbstractTransmutor {
      * the prefiltering and then calls the <code>handleURL</code> method.
      */
     protected void recieveURL(VisitorURL url) {
-        Integer degInt = new Integer(url.getProperty("url.degree"));
-        int degree = degInt.intValue();
+        int degree = 0;
+        try {
+            degree = Integer.valueOf(url.getProperty("url.degree")).intValue();
+        } catch (NumberFormatException e) {
+            Util.logMessage("Could not determine degree: " + e.getMessage(), Util.LOG_ERROR);
+        }
         if ((degree == 0) || (degree <= maxDegree)) {
             if (prefiltering) {
                 boolean accepted = true;

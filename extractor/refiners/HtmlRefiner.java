@@ -18,6 +18,7 @@ public class HtmlRefiner extends Refiner {
 
     /** Creates new HtmlRefiner */
     public HtmlRefiner() {
+        passing = false; // The output of this refiner is HTML, so no passing on.
     }
     
     /**

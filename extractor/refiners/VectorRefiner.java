@@ -26,6 +26,15 @@ public class VectorRefiner extends Refiner {
     public VectorRefiner() {
         urlList = new Vector();
     }
+    
+    /**
+     * Creates new VectorRefiner.
+     * @param passing If the input URL should be passed to the output.
+     */
+    public VectorRefiner(boolean passing) {
+        this();
+        this.passing = passing;
+    }
 
     /**
      * This method must be overridden by child classes to handle each of
@@ -37,7 +46,6 @@ public class VectorRefiner extends Refiner {
      */
     public void handleURL(VisitorURL url) {
         urlList.add(url);
-        printURL(url);
     }
     
     /**
