@@ -17,6 +17,8 @@ import org.xml.sax.helpers.XMLReaderFactory;
 import org.xml.sax.helpers.DefaultHandler;
 import java.io.*;
 import java.util.*;
+import org.apache.log4j.*;
+import org.apache.log4j.*;
 
 /**
  * This refines an existing URL list. It takes URLs from a XML URL list,
@@ -43,6 +45,10 @@ public abstract class Refiner extends AbstractTransmutor {
     protected int maxDegree = 0;
     /// Hash for the URLs already visited
     protected Hashtable visitCache;
+    /// Url XML Handler
+    protected UrlXMLHandler tHandler;
+    /// logger for this class.
+    protected static Logger logger = Logger.getLogger(Refiner.class);
     
     /*
      * If the refiner passes original the input URLs on to the output, this
@@ -61,13 +67,14 @@ public abstract class Refiner extends AbstractTransmutor {
         visitCache = new Hashtable();
         prefilters = new Vector();
         try {
+            logger.debug("Creating parser.");
             parser = XMLReaderFactory.createXMLReader("org.apache.xerces.parsers.SAXParser");
-            UrlXMLHandler tHandler = new UrlXMLHandler(this);
+            tHandler = new UrlXMLHandler(this);
             parser.setContentHandler(tHandler);
             parser.setErrorHandler(tHandler);
+            logger.debug("Parser created and set.");
         } catch (SAXException e) {
-            Util.logMessage("*** Extractor aborting due to error: " + e.getMessage(), Util.LOG_ERROR);
-            e.printStackTrace();
+            logger.error("SAX parsing error, aborting refine: " + e.getMessage(), e);
             // System.exit(1);
         }
     }
@@ -98,7 +105,7 @@ public abstract class Refiner extends AbstractTransmutor {
         if (filter != null) {
             prefiltering = true;
             prefilters.add(filter);
-            Util.logMessage("Added prefilter: " + filter.getClass().getName(), Util.LOG_MESSAGE);
+            logger.info("Added prefilter: " + filter.getClass().getName());
         }
     }
     
@@ -113,18 +120,19 @@ public abstract class Refiner extends AbstractTransmutor {
      */
     protected void refineBlank(InputSource input) {
         visitCache = new Hashtable();
-        UrlXMLHandler tHandler = new UrlXMLHandler(this);
-        parser.setContentHandler(tHandler);
-        Util.logMessage("Refiner: Starting generic refine. (Handler initialized)", Util.LOG_MESSAGE);
-        Util.logMessage("I am a " + this.getClass().getName(), Util.LOG_MESSAGE);
+        tHandler.reset();
+        if (logger.isInfoEnabled()) {
+            logger.info("Refining.");
+            logger.info("I am a " + this.getClass().getName());
+            logger.debug("Input is: " + input);
+        }
         try {
             parser.parse(input);
         } catch (SAXException e) {
-            Util.logMessage("*** Extractor aborting due to error: " + e.getMessage(), Util.LOG_ERROR);
-            e.printStackTrace();
+            logger.error("SAX Parser error, aborting: " + e.getMessage(), e);
             // System.exit(1);
         } catch (java.io.IOException e) {
-            Util.logMessage("*** Error opening location: " + input, Util.LOG_ERROR);
+            logger.error("Could not open location: " + input, e);
             // System.exit(1);
         }
     }
@@ -167,7 +175,7 @@ public abstract class Refiner extends AbstractTransmutor {
         try {
             degree = Integer.valueOf(url.getProperty("url.degree")).intValue();
         } catch (NumberFormatException e) {
-            Util.logMessage("Could not determine degree: " + e.getMessage(), Util.LOG_ERROR);
+            logger.error("Could not determine degree: " + e.getMessage());
         }
         if ((maxDegree == 0) || (degree <= maxDegree)) {
             if (prefiltering) {
@@ -179,20 +187,20 @@ public abstract class Refiner extends AbstractTransmutor {
                 }
                 if (!accepted) return;
             }
-        } else {
-            Util.logMessage("Refiner: URL with degree " + degree + " dropped, max. degree was " + maxDegree, Util.LOG_MESSAGE);
+        } else if (logger.isInfoEnabled()) {
+            logger.info("Refiner: URL with degree " + degree + " dropped, max. degree was " + maxDegree);
         }
         String uName = url.getProperty("url.name");
-        if (!visitCache.containsKey(uName)) { 
+        if (!visitCache.containsKey(uName)) {
             handleURL(url);
             visitCache.put(uName, url);
-        } else {
-            Util.logMessage("Refiner: Ignored duplicate url " + uName, Util.LOG_DEBUG);
+        } else if (logger.isDebugEnabled()) {
+            logger.debug("Refiner: Ignored duplicate url " + uName);
         }
         if (passing) {
             printURL(url);
         } else {
-            Util.logMessage("Refiner: URL not passed, passing disabled.", Util.LOG_DEBUG);
+            logger.debug("Refiner: URL not passed, passing disabled.");
         }
     }
     

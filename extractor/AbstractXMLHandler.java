@@ -6,6 +6,7 @@
 
 package gilbert.extractor;
 import java.util.*;
+import org.apache.log4j.*;
 
 /**
  * Abstract superclass for all XML Handlers. This just implements some core
@@ -18,6 +19,8 @@ public abstract class AbstractXMLHandler
 implements org.xml.sax.ContentHandler, org.xml.sax.ErrorHandler {
     /// A stack that holds the currently open tags and data.
     protected Stack tagStack;
+    /// The logger for this class
+    protected static Logger logger = Logger.getLogger(AbstractXMLHandler.class);
     
     /** Creates new AbstractXMLHandler */
     public AbstractXMLHandler() {
@@ -25,11 +28,11 @@ implements org.xml.sax.ContentHandler, org.xml.sax.ErrorHandler {
 
     public void startDocument() throws org.xml.sax.SAXException {
         tagStack = new Stack();
-        Util.logMessage("*XMLHandler.startDocument()", Util.LOG_DEBUG);
+        logger.debug("startDocument()");
     }
     
     public void characters(char[] ch, int start, int length) throws org.xml.sax.SAXException {
-        Util.logMessage("*XMLHandler.characters: -" + new String(ch, start, length) + "-", Util.LOG_DEBUG);
+        if (logger.isDebugEnabled()) logger.debug("characters(): -" + new String(ch, start, length) + "-");
         String chS = new String(ch, start, length);
         if (!chS.trim().equals("")) {
             tagStack.push(new StringBuffer(chS));
@@ -46,11 +49,11 @@ implements org.xml.sax.ContentHandler, org.xml.sax.ErrorHandler {
     }
     
     public void endDocument() throws org.xml.sax.SAXException {
-        Util.logMessage("*XMLHandler.endDocument()", Util.LOG_DEBUG);
+        logger.debug("endDocument()");
         // Check for sanity
         if (!tagStack.empty()) {
-            System.err.println("*** Warning: Stack not empty at end of document!");
-            System.err.println(tagStack);
+            logger.error("*** Warning: Stack not empty at end of document!");
+            logger.error(tagStack);
         }
     }
     
@@ -70,18 +73,25 @@ implements org.xml.sax.ContentHandler, org.xml.sax.ErrorHandler {
     }
     
     public void warning(org.xml.sax.SAXParseException e) throws org.xml.sax.SAXException {
-        Util.logMessage("XML Warning in line: " + e.getLineNumber(), Util.LOG_WARN);
-        Util.logMessage("Exception was: " + e.getMessage(), Util.LOG_WARN);
+        logger.warn("XML Warning in line: " + e.getLineNumber());
+        logger.warn("Exception was: " + e.getMessage());
     }
     
     public void error(org.xml.sax.SAXParseException e) throws org.xml.sax.SAXException {
-        Util.logMessage("XML error (recoverable) in line: " + e.getLineNumber(), Util.LOG_ERROR);
-        Util.logMessage("Exception was: " + e.getMessage(), Util.LOG_ERROR);
+        logger.error("XML error (recoverable) in line: " + e.getLineNumber());
+        logger.error("Exception was: " + e.getMessage());
     }
     
     public void fatalError(org.xml.sax.SAXParseException e) throws org.xml.sax.SAXException {
-        Util.logMessage("XML fatal error in line: " + e.getLineNumber(), Util.LOG_ERROR);
-        e.printStackTrace();
+        logger.error("XML fatal error in line: " + e.getLineNumber(), e);
         throw(new org.xml.sax.SAXException(e.getMessage()));
+    }
+    
+    /**
+     * Resets the Handler.
+     */
+    public void reset() {
+        tagStack = new Stack();
+        logger.debug("Reset.");
     }
 }

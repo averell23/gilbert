@@ -14,6 +14,7 @@ import gilbert.extractor.*;
 import gilbert.extractor.extractors.*;
 import gilbert.extractor.refiners.*;
 import gilbert.extractor.filters.*;
+import org.apache.log4j.*;
 
 /**
  * Java Bean to be used as an interface between the Extractor classes
@@ -44,16 +45,27 @@ public class ExtractorBean {
     protected int failures = 0;
     /// The max. number of failed extractions that the backoff takes into account.
     protected int maxBackoff = 6;
+    /// Logger for this class
+    protected Logger logger = Logger.getLogger(ExtractorBean.class);
+    /// Counter for the beans
+    protected static long beanCount = 0;
+    /// Name for current Bean
+    protected String beanName;
     
     /** Creates new ExtractorBean */
     public ExtractorBean() {
-        Util.setLogLevel(Util.LOG_MESSAGE);
+        // Create the Beans name
+        synchronized (ExtractorBean.class) {
+            beanName = "Bean object no " + beanCount;
+            beanCount++;
+        }
+        NDC.push(beanName);
         currentSet = new Vector();
         fallbackUrl = new VisitorURL();
         fallbackUrl.setProperty("url.name", "nothing.html");
         currentSet.add(fallbackUrl);
         extractor = new ExtractingChain(dataSource);
-        StraightExtractor ext = new StraightExtractor();
+        SimpleExtractor ext = new SimpleExtractor();
         ext.addPrefilter(new LocalVisitFilter());
         ext.addPrefilter(new AgentVisitFilter());
         extractor.setExtractor(ext);
@@ -67,6 +79,7 @@ public class ExtractorBean {
         endRef = new VectorRefiner();
         extractor.addRefiner(endRef);
         timestamp = 0;
+        NDC.pop();
     }
     
     public void setFallbackUrl(String fbu) {
@@ -114,14 +127,15 @@ public class ExtractorBean {
      * extraction process will be started anew.
      */
     public void update() throws IOException { 
+        NDC.push(beanName);
         /* Calculate the real time out. Take into account the failures for backoff time. */
         long realTimeout = (failures == 0)?timeOut:((long) (timeOut * ((failures - 1) * 0.25)));
-        Util.logMessage("Real timeout calculated to: " + (realTimeout / 1000), Util.LOG_DEBUG);
+        logger.debug("Real timeout calculated to: " + (realTimeout / 1000));
         if ((timestamp + realTimeout) < System.currentTimeMillis()) {
-            if (failures != 0) {
-                Util.logMessage("Last extraction failed, retry no. " + failures
+            if (logger.isDebugEnabled() && (failures != 0)) {
+                logger.debug("Last extraction failed, retry no. " + failures
                                 + " after " + ((System.currentTimeMillis() - timestamp) / 1000)
-                                + " seconds.", Util.LOG_MESSAGE);
+                                + " seconds.");
             }
             endRef.reset();
             extractor.extract();
@@ -131,10 +145,11 @@ public class ExtractorBean {
                 timestamp = System.currentTimeMillis();
                 failures = 0;
             } else {
-                Util.logMessage("ExtractorBean: Extraction failed (no results)", Util.LOG_MESSAGE);
+                logger.warn("ExtractorBean: Extraction failed (no results)");
                 if (failures < maxBackoff) failures++; // increase the failure counter..
                 timestamp = System.currentTimeMillis();
             }
         }
+        NDC.pop();
     }
 }

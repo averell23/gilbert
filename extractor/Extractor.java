@@ -17,12 +17,12 @@ import org.xml.sax.helpers.XMLReaderFactory;
 import org.xml.sax.helpers.DefaultHandler;
 import java.io.*;
 import java.util.*;
-
+import org.apache.log4j.*;
 
 /**
  * This is the superclass for an URL extractor. It takes an XML source
  * with visit information and tries to find related URLs. The found URLs
- * should then be printed as an XML URL list. (The mode of output is not 
+ * should then be printed as an XML URL list. (The mode of output is not
  * enforced by this class, though.)
  *
  * @author  Daniel Hahn
@@ -37,6 +37,10 @@ public abstract class Extractor extends AbstractTransmutor {
     protected Vector postfilters;
     /// Indicates if postfiltering is off
     protected boolean postfiltering = false;
+    /// Visit XML Handler
+    protected VisitXMLHandler tHandler;
+    /// Logger for this class
+    protected static Logger logger = Logger.getLogger(Extractor.class);
     
     /**
      * Creates a new extractor.
@@ -44,12 +48,12 @@ public abstract class Extractor extends AbstractTransmutor {
     public Extractor() {
         try {
             parser = XMLReaderFactory.createXMLReader("org.apache.xerces.parsers.SAXParser");
-            VisitXMLHandler tHandler = new VisitXMLHandler(this);
+            tHandler = new VisitXMLHandler(this);
             parser.setContentHandler(tHandler);
             parser.setErrorHandler(tHandler);
+            logger.debug("Parser created.");
         } catch (SAXException e) {
-            System.err.println("*** Extractor aborting due to error: " + e.getMessage());
-            e.printStackTrace();
+            logger.error("SAX parser exception, aborting: " + e.getMessage(), e);
             // System.exit(1);
         }
         prefilters = new Vector();
@@ -63,36 +67,33 @@ public abstract class Extractor extends AbstractTransmutor {
      */
     // FIXME: Throws null pointer when file is not of proper format..
     public void extract(InputSource input) {
-        VisitXMLHandler tHandler = new VisitXMLHandler(this);
-        parser.setContentHandler(tHandler);
-        Util.logMessage("Extractor: Parser re-initialized.", Util.LOG_DEBUG);
+        logger.debug("Extracting.");
+        tHandler.reset();
         outStream.println("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
         outStream.println("<url_list>");
         try {
             parser.parse(input);
         } catch (SAXException e) {
-            Util.logMessage("*** Extractor aborting due to error: " + e.getMessage(), Util.LOG_ERROR);
-            e.printStackTrace();
+            logger.error("SAX Parser exception: " + e.getMessage(), e);
             // System.exit(1);
         } catch (java.io.IOException e) {
-            Util.logMessage("*** Error opening location: " + input, Util.LOG_ERROR);
-            Util.logMessage("*** Input public Id was: " + input.getPublicId(), Util.LOG_ERROR);
-	    e.printStackTrace();
+            logger.error("Input public Id was: " + input.getPublicId());
+            logger.error("Could not open input: " + input + " (" + e.getMessage() + ")" , e);
             // System.exit(1);
         }
         outStream.println("</url_list>");
     }
     
-    /** 
+    /**
      * Extrats the XML Data from a given URI.
      */
     public void extract(String uri) {
         InputSource src = new InputSource(uri);
-	src.setPublicId(uri);
+        src.setPublicId(uri);
         extract(src);
     }
-
-    /** 
+    
+    /**
      * Adds a prefilter to the Extractor. Prefilters will automatically
      * be applied to each visit by the <code>recieveVisit</code> method.
      */
@@ -103,7 +104,7 @@ public abstract class Extractor extends AbstractTransmutor {
         }
     }
     
-    /** 
+    /**
      * Adds a postfilter to the Extractor. Postfilters should be honoured
      * by the child classes, but this may not always be the case.
      */
@@ -121,23 +122,25 @@ public abstract class Extractor extends AbstractTransmutor {
      */
     protected void recieveVisit(Visit v) {
         if (prefiltering) {
-            Util.logMessage("Extractor: Executing prefilters.", Util.LOG_DEBUG);
+            logger.debug("Extractor: Executing prefilters.");
             boolean accepted = true;
             Enumeration filters = prefilters.elements();
             while (filters.hasMoreElements()) {
                 VisitFilter cFilter = (VisitFilter) filters.nextElement();
-                Util.logMessage("Filtering: Executing filter: " + cFilter.getClass().getName(), Util.LOG_DEBUG);
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Filtering: Executing filter: " + cFilter.getClass().getName());
+                }
                 accepted = accepted && cFilter.accept(v);
             }
             if (!accepted) {
-                Util.logMessage("Extractor: Some filter rejected the visit. Returning to Handler.", Util.LOG_DEBUG);
+                if (logger.isDebugEnabled()) logger.debug("Extractor: Some filter rejected the visit. Returning to Handler.");
                 return;
             }
-        } 
+        }
         handleVisit(v);
     }
- 
-    /** 
+    
+    /**
      * This is the method that child classes should override
      * to handle each visit. This will be called from
      * <code>recieveVisit()</code> if the visit passed the

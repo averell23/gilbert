@@ -12,6 +12,8 @@ import javax.swing.text.html.*;
 import javax.swing.text.*;
 import java.io.*;
 import java.net.*;
+import org.apache.log4j.*;
+
 /**
  * This is a web search using the Google search engine (http://www.google.com/).
  * Current version supports only the search.keywords, search.resultcount and
@@ -31,9 +33,12 @@ public class GoogleSearch extends WebSearch {
     public boolean doneParsing = false;
     /// If we have already parsed the result of the current paragraph
     public boolean paragraphParsed = false;
+    /// Logger for this class.
+    protected Logger logger;
     
     /** Creates new GoogleSearch */
     public GoogleSearch() {
+        logger = Logger.getLogger(this.getClass());
     }
     
     /**
@@ -42,6 +47,7 @@ public class GoogleSearch extends WebSearch {
      * will block until the search is complete.
      */
     public GoogleSearch(Properties params) {
+        super();
         setParameters(params);
         search();
     }
@@ -58,7 +64,7 @@ public class GoogleSearch extends WebSearch {
         results = new Vector();
         String keywords = parameters.getProperty("search.keywords");
         if ((keywords == null) || keywords.equals("")) {
-            System.err.println("No keywords were specified for search.");
+            logger.error("No keywords were specified for search.");
             return results;
         }
         keywords = keywords.replace(',', '+');
@@ -95,7 +101,7 @@ public class GoogleSearch extends WebSearch {
         paragraphParsed = false;
         doneParsing = false;
         
-        Util.logMessage("Searching domain " + domain + ", language: " + language, Util.LOG_MESSAGE);
+        logger.info("Searching domain " + domain + ", language: " + language);
         URL sUrl = null;
         
         StringBuffer searchBuf = new StringBuffer(GOOGLE_HOME);
@@ -111,15 +117,15 @@ public class GoogleSearch extends WebSearch {
             searchBuf.append("&lr=lang_" + language);
         }
         searchBuf.append("&btnG=Google+Search");
-        Util.logMessage("Using URL: " + searchBuf, Util.LOG_DEBUG);
+        if (logger.isDebugEnabled()) logger.debug("Using URL: " + searchBuf);
         try {
             sUrl = new URL(searchBuf.toString());
         } catch (MalformedURLException e) {
-            System.err.println("Error, malformed search URL: " + searchBuf);
+            logger.error("Error, malformed search URL: " + searchBuf);
             return;
         }
         callSearch(sUrl);
-        Util.logMessage("GoogleSearch: Search call returned.", Util.LOG_DEBUG);
+        logger.debug("GoogleSearch: Search call returned.");
     }
     
     void handleHTMLEndTag(HTML.Tag t,int pos) {
@@ -128,7 +134,7 @@ public class GoogleSearch extends WebSearch {
         /* if (t.equals(HTML.Tag.DIV)) {
             parseResults = false;
             doneParsing = true;
-            Util.logMessage("Leaving parseable area", Util.LOG_DEBUG);
+            logger.debug("Leaving parseable area");
         } */
     }
     
@@ -138,25 +144,27 @@ public class GoogleSearch extends WebSearch {
      */
     void handleHTMLSimpleTag(HTML.Tag t, MutableAttributeSet a, int pos) {
         if (t.equals(HTML.Tag.DIV)) {
-            Util.logMessage("DIV", Util.LOG_DEBUG);
+            logger.debug("DIV tag found");
             if  (!(parseResults || doneParsing)) {
-                Util.logMessage("Start Parsing", Util.LOG_DEBUG);
+                logger.debug("Start Parsing");
                 parseResults = true;
             } else {
-                Util.logMessage("Stop parsing", Util.LOG_DEBUG);
+                logger.debug("Stop parsing");
                 parseResults = false;
                 doneParsing = true;
             }
         }
         if (t.equals(HTML.Tag.A) && (!paragraphParsed) && parseResults) { // Get a new URL
             String urlName = (String) a.getAttribute(HTML.Attribute.HREF);
-            Util.logMessage("GoogleSearch: Trying to capture: " + urlName, Util.LOG_DEBUG);
+            if (logger.isDebugEnabled()) {
+                logger.debug("GoogleSearch: Trying to capture: " + urlName);
+            }
             URL myUrl = null;
             try {
                 myUrl = new URL(urlName);
                 results.add(myUrl);
             } catch(MalformedURLException e) {
-                System.err.println("Malformed URL: " + urlName);
+                logger.error("Malformed URL: " + urlName);
             }
             paragraphParsed = true;
         }
@@ -166,7 +174,7 @@ public class GoogleSearch extends WebSearch {
         // This would be the proper handling if the DIV wasn't
         // handled as a simple tag...
         /* if (t.equals(HTML.Tag.DIV) && (!doneParsing)) { // The first Div is the start of the results
-            Util.logMessage("Entering parseable area", Util.LOG_DEBUG);
+            logger.debug("Entering parseable area");
             parseResults = true;
         } */
         if (parseResults) {
@@ -180,7 +188,7 @@ public class GoogleSearch extends WebSearch {
                 try {
                     myUrl = new URL(urlName);
                 } catch(MalformedURLException e) {
-                    System.err.println("Malformed URL: " + urlName);
+                    logger.error("Malformed URL: " + urlName);
                 }
                 paragraphParsed = true;
                 results.add(myUrl);

@@ -12,6 +12,7 @@ import java.io.*;
 import javax.swing.text.*;
 import javax.swing.text.html.*;
 import javax.swing.text.html.parser.*;
+import org.apache.log4j.*;
 
 /**
  * Class with some neat static utility mehtods on can use.
@@ -25,11 +26,13 @@ public class Util {
      * Init the system properties. That needs to be done only once.
      */
     static {
+        Logger logger = Logger.getLogger(Util.class);
         Properties sysProps = System.getProperties();
         sysProps.setProperty("http.proxyHost", "wwwcache.lancs.ac.uk");
         sysProps.setProperty("http.proxyPort", "8080");
         sysProps.setProperty("sun.net.client.defaultConnectTimeout", "1000");
-        sysProps.setProperty("sun.net.client.defaultReadTimeout", "5000");
+        sysProps.setProperty("sun.net.client.defaultReadTimeout", "1000");
+        logger.debug("Util static initialization complete.");
     }
     
     public static final int IP_ADDRESS = 1;
@@ -56,6 +59,8 @@ public class Util {
     protected static long cacheTimestamp = System.currentTimeMillis();
     /// Inteverval for cach cleanups in minutes
     protected static int cleanupInterval = 15; // Thrice the time of the cache timeout
+    /// Logger for Util class
+    protected static Logger logger = Logger.getLogger(Util.class);
     
     
     /**
@@ -86,7 +91,7 @@ public class Util {
      * <code>SiteInfo</code> object containig the status.
      */
     public static SiteInfo siteStatus(String urlStr) {
-        Util.logMessage("Checking site status for url: " + urlStr, Util.LOG_MESSAGE);
+        if (logger.isInfoEnabled()) logger.info("Checking site status for url: " + urlStr);
         URL u = null;
         HttpURLConnection conn = null;
         
@@ -94,43 +99,8 @@ public class Util {
         SiteInfo retVal = checkSiteCache(urlStr);
         
         if (retVal == null) {
-            Util.logMessage("No cache entry: Creating site status for: " + urlStr, Util.LOG_MESSAGE);
+            logger.info("No cache entry: Creating site status for: " + urlStr);
             retVal = new SiteInfo(urlStr);
-            try {
-                u = new URL(urlStr);
-                conn = (HttpURLConnection) u.openConnection();
-                conn.setRequestMethod("GET");
-                conn.connect();
-                int resCode = conn.getResponseCode();
-                Util.logMessage("Got return code: " + resCode, Util.LOG_DEBUG);
-                String contentType = conn.getContentType();
-                Util.logMessage("Got content type: " + contentType, Util.LOG_DEBUG);
-                retVal.setContentType(contentType);
-                // Parse the page if it's HTML
-                if ((contentType != null) && contentType.startsWith("text/html")) {
-                    DocumentParser parser = new DocumentParser(DTD.getDTD("HTML"));
-                    HTMLEditorKit.ParserCallback pc = new Util.InternalParserCallback(retVal);
-                    parser.parse(new InputStreamReader(conn.getInputStream()), pc, true);
-                    Util.logMessage("Site Status parser finished.", LOG_DEBUG);
-                } else {
-                    Util.logMessage("Site Status parsing: Ignored URL with non-html type: " + contentType + "(" + urlStr + ")", Util.LOG_MESSAGE);
-                }
-                // End parsing code
-                conn.disconnect();
-                if (resCode >= 400) { // If the code is not an ok or redirect
-                    Util.logMessage("Host was not alive", Util.LOG_MESSAGE);
-                    retVal.setAlive(false);
-                } else {
-                    Util.logMessage("Host found alive", Util.LOG_MESSAGE);
-                    retVal.setAlive(true);
-                }
-            } catch (MalformedURLException e) {
-                logMessage(urlStr + " is not a valid URL.", LOG_WARN);
-                retVal.setAlive(false);
-            } catch (IOException e) {
-                Util.logMessage("IOException checking for host status: " + e.getMessage(), Util.LOG_MESSAGE);
-                retVal.setAlive(false);
-            }
             addCacheEntry(retVal);
         }
         return retVal;
@@ -139,6 +109,8 @@ public class Util {
     /**
      * Sets a new log level. <code>logMessage()</code> will
      * log all messages with a severity of that level or higher.
+     *
+     * @deprecated Use log4j API instead.
      */
     public static void setLogLevel(int logL) {
         logLevel = logL;
@@ -147,6 +119,8 @@ public class Util {
     /**
      * Sets the log stream. <code>logMessage()</code> will print all
      * log messages on that stream.
+     *
+     * @deprecated Use log4j API instead.
      */
     public static void setLogStream(PrintStream ls) {
         logStream = ls;
@@ -156,6 +130,7 @@ public class Util {
      * Logs a message. This writes the given string to the log stream
      * if the severity given is as (or more) severe than the current
      * logging level.
+     * @deprecated Use the log4j interface instead.
      */
     public static void logMessage(String message, int severity) {
         if (severity <= logLevel) {
@@ -217,7 +192,7 @@ public class Util {
             if ((current.getTimestamp() + (siteCacheTimeout * 1000)) < System.currentTimeMillis()) {
                 siteCache.remove(host); // Lazy cleanup
             } else {
-                Util.logMessage("Found valid cache entry for host: " + host, Util.LOG_MESSAGE);
+                logger.info("Found valid cache entry for host: " + host);
                 retval = current;
             }
         }
@@ -230,133 +205,18 @@ public class Util {
      */
     protected static void cleanupSiteCache() {
         if  ((cacheTimestamp + (cleanupInterval * 60000)) < System.currentTimeMillis()) {
-            Util.logMessage("Util: Cleaning up site cache. (" + siteCache.size() + "entries)", Util.LOG_MESSAGE);
+            logger.info("Util: Cleaning up site cache. (" + siteCache.size() + "entries)");
             Enumeration keys = siteCache.keys();
             while (keys.hasMoreElements()) {
                 String key = (String) keys.nextElement();
                 SiteInfo current = (SiteInfo) siteCache.get(key);
                 if ((current.getTimestamp() + (siteCacheTimeout * 1000)) < System.currentTimeMillis()) {
                     siteCache.remove(key);
-                    Util.logMessage("Util: Stale cache entry removed: " + key, Util.LOG_DEBUG);
+                    if (logger.isDebugEnabled()) logger.debug("Util: Stale cache entry removed: " + key);
                 }
             }
             cacheTimestamp = System.currentTimeMillis();
-            Util.logMessage("Util: Cache cleanup complete.", Util.LOG_MESSAGE);
+            logger.info("Util: Cache cleanup complete.");
         }
     }
-    
-    /**
-     * Internal Parser Callback class, for parsing documents for additional
-     * SiteStatus information
-     */
-    protected static class InternalParserCallback extends HTMLEditorKit.ParserCallback {
-        /// Indicates if the title is being parsed at the moment.
-        boolean parseTitle = false;
-        /// StringBuffer for the title string.
-        StringBuffer titleBuffer;
-        /// SiteInfo object this parser puts the data into
-        SiteInfo info;
-        
-        /**
-         * Creates a new InternalParserCallback.
-         * @param info The <code>SiteInfo</code> object that takes the
-         *             information from this parser.
-         */
-        public InternalParserCallback(SiteInfo info) {
-            Util.logMessage("Internal Callback initializing...", Util.LOG_DEBUG);
-            this.info = info;
-        }
-        
-        public void handleStartTag(HTML.Tag tag, MutableAttributeSet a, int pos) {
-            Util.logMessage("Site Status Parser: Start Tag Handler called.", Util.LOG_DEBUG);
-            // check for the <title> tag
-            if (tag.equals(HTML.Tag.TITLE)) {
-                Util.logMessage("Site Info Parser: Started Title Tag.", Util.LOG_DEBUG);
-                parseTitle = true;
-                titleBuffer = new StringBuffer();
-                return;
-            }
-            
-            // check for the Meta tag
-            if (tag.equals(HTML.Tag.META)
-            && a.isDefined(HTML.Attribute.NAME)
-            && a.isDefined(HTML.Attribute.CONTENT)) {
-                String attrib = a.getAttribute(HTML.Attribute.NAME).toString().toLowerCase();
-                if (attrib.equals("keywords")) {
-                    String keywords = a.getAttribute(HTML.Attribute.CONTENT).toString();
-                    String[] keylist = keywords.split("\\s*,\\s*");
-                    for (int i = 0 ; i < keylist.length ; i++) {
-                        info.addMetaKeyword(keylist[i]);
-                        Util.logMessage("Site Info Parser: Added META keyword: " + keylist[i], Util.LOG_DEBUG);
-                    }
-                }
-                if (attrib.equals("description")) {
-                    info.setMetaDescription(a.getAttribute(HTML.Attribute.CONTENT).toString());
-                    Util.logMessage("Site Info parser added META description: " + a.getAttribute(HTML.Attribute.CONTENT).toString(), Util.LOG_DEBUG);
-                }
-            }
-        }
-        
-        public void handleEndTag(HTML.Tag tag, int pos) {
-            Util.logMessage("Site Info Parser: End tag handler called", Util.LOG_DEBUG);
-            if (tag.equals(HTML.Tag.TITLE)) {
-                parseTitle = false;
-                info.setMetaTitle(titleBuffer.toString());
-                Util.logMessage("Site Info parser: Stopped title parsing", Util.LOG_DEBUG);
-                Util.logMessage("Put title string " + titleBuffer, Util.LOG_DEBUG);
-            }
-        }
-        
-        public void handleText(char[] data, int pos) {
-            Util.logMessage("Site Info Parser: Text Handler called", Util.LOG_DEBUG);
-            if (parseTitle) {
-                titleBuffer.append(data);
-            }
-        }
-        
-        public void handleSimpleTag(HTML.Tag tag, MutableAttributeSet a, int pos) {
-            Util.logMessage("Site Info: Simple Tag Handler called.", Util.LOG_DEBUG);
-            if (tag.equals(HTML.Tag.A) && a.isDefined(HTML.Attribute.HREF)) {
-                String attrib = a.getAttribute(HTML.Attribute.HREF).toString().toLowerCase();
-                if (attrib.startsWith("http:")) {
-                    Util.logMessage("Site Info Parser: Added link to " + attrib, Util.LOG_MESSAGE);
-                    info.addLink(attrib);
-                } else if (attrib.startsWith("#")) {
-                    // Link to an internal anchor
-                    /* Uncomment if you really want to follow internal links
-                    String url = info.getUrl();
-                    int idx = url.indexOf("?");
-                    if (idx != -1) url = url.substring(0, idx);
-                    attrib = url + attrib; 
-                    info.addLink(attrib);
-                     */
-                    Util.logMessage("Site Info Parser: Internal link (ignored):" + attrib, Util.LOG_MESSAGE);
-                } else if (attrib.startsWith("/")) {
-                    // Internal absolute link
-                    String url = info.getUrl();
-                    int idx = url.indexOf("/", 8);
-                    if (idx != -1) url = url.substring(0,idx);
-                    attrib = url + attrib;
-                    Util.logMessage("Site Info Parser: Constructed link to internal document: " + attrib, Util.LOG_MESSAGE);
-                    info.addLink(attrib);
-                } else if (attrib.matches("[^:].*")) { // At the moment, match everything
-                    // seems to be a relative link to another page.
-                    String url = info.getUrl();
-                    int idx = url.indexOf("?");
-                    if (idx != -1) url = url.substring(0,idx);
-                    if (url.endsWith("/")) {
-                        attrib = url + attrib;
-                    } else {
-                        attrib = url + "/" + attrib;
-                    }
-                    info.addLink(attrib);
-                    Util.logMessage("Site Info Parser: Constructed link from relative: " + attrib, Util.LOG_MESSAGE);
-                } else {
-                    Util.logMessage("Site Info Parser: Ignoring unknown link: " + attrib, Util.LOG_MESSAGE);
-                } 
-            }
-        }
-        
-    } // End of inner class InternalParserCallback
-    
 }

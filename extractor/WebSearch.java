@@ -12,6 +12,7 @@ import javax.swing.text.html.*;
 import javax.swing.text.*;
 import java.io.*;
 import java.net.*;
+import org.apache.log4j.*;
 
 /**
  * Abstract base class for a Web search. This will connect to a particular
@@ -27,17 +28,20 @@ public abstract class WebSearch {
     protected Properties parameters;
     /** Callback class for HTML parsing */
     protected ParserCallback myCallback;
+    /// Logger for this class
+    protected Logger logger;
     
     /**
      * Default constructor
      */
     public WebSearch() {
+        logger = Logger.getLogger(this.getClass());
         // Kludge for Proxy settings...
         // FIXME: Proxy settings should go to global setting class
         Properties sysProps = System.getProperties();
         sysProps.setProperty("http.proxyHost", "wwwcache.lancs.ac.uk");
         sysProps.setProperty("http.proxyPort", "8080");
-        Util.logMessage("System Properties set for proxy", Util.LOG_DEBUG);
+        logger.debug("System Properties set for proxy");
         myCallback = new ParserCallback();
     }
     
@@ -86,7 +90,7 @@ public abstract class WebSearch {
      */
     protected void callSearch(URL searchURL) {
         try {
-            Util.logMessage("Trying to open search connection for: " + searchURL, Util.LOG_DEBUG);
+            if (logger.isDebugEnabled()) logger.debug("Trying to open search connection for: " + searchURL);
             HttpURLConnection conn = (HttpURLConnection) searchURL.openConnection();
             conn.setRequestMethod("GET");
             conn.setRequestProperty("User-Agent", "Mozilla/4.0 (compatible; MSIE 5.5; Windows NT 4.0");
@@ -95,9 +99,8 @@ public abstract class WebSearch {
             parser.parse(new InputStreamReader(conn.getInputStream()), myCallback, true);
             conn.disconnect();
         } catch (IOException e) {
-            System.err.println("Unable to get search result page.");
-            System.err.println("I/O Exception: " + e.getMessage());
-            e.printStackTrace();
+            logger.error("Unable to get search result page.");
+            logger.error("I/O Exception: " + e.getMessage(), e);
             results = null;
         }
     }

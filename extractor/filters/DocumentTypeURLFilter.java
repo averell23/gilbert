@@ -7,6 +7,7 @@
 package gilbert.extractor.filters;
 import gilbert.extractor.*;
 import java.util.*;
+import org.apache.log4j.*;
 
 /**
  * Filters unwanted document types. This will now properly check the encoding
@@ -18,6 +19,8 @@ import java.util.*;
 public class DocumentTypeURLFilter implements URLFilter {
     /** Allowed document types for this filter. */
     protected Vector types;
+    /// Logger for this class
+    protected Logger logger = Logger.getLogger(this.getClass());
     
     /**
      * Creates a new instance of DocumentTypeURLFilter.
@@ -47,8 +50,8 @@ public class DocumentTypeURLFilter implements URLFilter {
                 accepted = accepted || info.getContentType().equals((String) typeList.nextElement());
             }
         }
-        if (!accepted) {
-            Util.logMessage("URL dropped by filter, unknown type: " + info.getContentType(), Util.LOG_MESSAGE);
+        if (logger.isInfoEnabled() && !accepted) {
+            logger.info("URL dropped by filter, unknown type: " + info.getContentType());
         }
         return accepted;
     }

@@ -7,6 +7,7 @@
 package gilbert.extractor;
 
 import java.util.*;
+import org.apache.log4j.*;
 
 /**
  * This is the XML Content Handler to read visit records from the XML source. It
@@ -21,6 +22,8 @@ public class VisitXMLHandler extends AbstractXMLHandler {
     protected Extractor extractor;
     /// The visit that is currently build
     private Visit currentVisit;
+    /// Logger for this class
+    protected Logger logger;
     
     /**
      * Creates new VisitXMLHandler.
@@ -29,10 +32,12 @@ public class VisitXMLHandler extends AbstractXMLHandler {
      */
     protected VisitXMLHandler(Extractor extractor) {
         this.extractor = extractor;
+        logger = Logger.getLogger(this.getClass());
+        logger.debug("Created.");
     }
     
     public void startElement(java.lang.String namespaceURI, java.lang.String localName, java.lang.String qName, org.xml.sax.Attributes attributes) throws org.xml.sax.SAXException {
-        Util.logMessage("VistXMLHandler.startElement(): " + localName, Util.LOG_DEBUG);
+        if (logger.isDebugEnabled()) logger.debug("VistXMLHandler.startElement(): " + localName);
         if (localName.equals("visit")) {
             if (currentVisit != null) {
                 throw(new org.xml.sax.SAXException("Wrong format: Visit not closed before starting new"));
@@ -44,7 +49,7 @@ public class VisitXMLHandler extends AbstractXMLHandler {
     }
     
     public void endElement(java.lang.String namespaceURI, java.lang.String localName, java.lang.String qName) throws org.xml.sax.SAXException {
-        Util.logMessage("VisitXMLHandler.endElement(): " + localName, Util.LOG_DEBUG);
+        if (logger.isDebugEnabled()) logger.debug("VisitXMLHandler.endElement(): " + localName);
         if (localName.equals("visitlist")) return;
         Object top = tagStack.pop();
         StringBuffer data = new StringBuffer();
@@ -61,7 +66,7 @@ public class VisitXMLHandler extends AbstractXMLHandler {
                 throw(new org.xml.sax.SAXException("Tag <" + startTag + "> ended by <" + localName + ">"));
             }
             currentVisit.addKeyword(data.toString());
-            Util.logMessage("Added keyword: " + data, Util.LOG_DEBUG);
+            if (logger.isDebugEnabled()) logger.debug("Added keyword: " + data);
         } else if (localName.equals("visit")) {
             if (!((String) top).equals("visit")) {
                 throw(new org.xml.sax.SAXException("Visit record not read correctly, popped " + top));
@@ -81,7 +86,7 @@ public class VisitXMLHandler extends AbstractXMLHandler {
             }
             // Now create the key string for the Properties object
             Enumeration open = tagStack.elements();
-            Util.logMessage("Tag stack: " + tagStack, Util.LOG_DEBUG);
+            if (logger.isDebugEnabled()) logger.debug("Tag stack: " + tagStack);
             if (open.hasMoreElements()) {
                 key.append((String) open.nextElement());
             }
@@ -95,13 +100,20 @@ public class VisitXMLHandler extends AbstractXMLHandler {
                 key.append('.');
                 key.append(data);
                 currentVisit.setProperty(key.toString(), "true");
-                Util.logMessage("Adding new class: " + key, Util.LOG_DEBUG);
+                if (logger.isDebugEnabled()) logger.debug("Adding new class: " + key);
             } else {
                 currentVisit.setProperty(key.toString(), data.toString());
-                Util.logMessage("Adding new entry: " + key + "," + data, Util.LOG_DEBUG);
+               if (logger.isDebugEnabled()) logger.debug("Adding new entry: " + key + "," + data);
             }
         }
-        Util.logMessage("*Done*", Util.LOG_DEBUG);
+        logger.debug("*Done*");
+    }
+    
+    /// Resets the handler
+    public void reset() {
+        currentVisit = null;
+        logger.debug("Reset.");
+        super.reset();
     }
     
 }

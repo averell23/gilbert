@@ -8,6 +8,7 @@ package gilbert.extractor;
 import org.xml.sax.*;
 import java.util.*;
 import java.io.*;
+import org.apache.log4j.*;
 
 /**
  * A chain of an <code>Extractor</code> and multiple <code>Refiner</code>s. 
@@ -21,12 +22,14 @@ import java.io.*;
 public class ExtractingChain extends RefinerChain {
     /// The Extractor that starts the chain
     protected Extractor extractor;
+    /// The logger for this class
     
     /**
      * Creates new ExtractingChain.
      */
     public ExtractingChain() {
         super();
+        logger = Logger.getLogger(this.getClass());
     }
     
     /**
@@ -34,6 +37,7 @@ public class ExtractingChain extends RefinerChain {
      */
     public ExtractingChain(InputSource input) {
         super(input);
+        logger = Logger.getLogger(this.getClass());
     }
     
     /**
@@ -41,6 +45,7 @@ public class ExtractingChain extends RefinerChain {
      */
     public ExtractingChain(String uri) {
         super(new InputSource(uri));
+        logger = Logger.getLogger(this.getClass());
     }
     
     /**
@@ -50,6 +55,7 @@ public class ExtractingChain extends RefinerChain {
     public ExtractingChain(String uri, Extractor extractor) {
         super(new InputSource(uri));
         this.extractor = extractor;
+        logger = Logger.getLogger(this.getClass());
     }
     
     /**
@@ -59,7 +65,7 @@ public class ExtractingChain extends RefinerChain {
      */
     public void extract() throws IOException {
         if (extractor == null) {
-            Util.logMessage("Cannot start extraction chain: No input source", Util.LOG_ERROR);
+            logger.error("Cannot start extraction chain: No input source");
             return;
         }
         ByteArrayOutputStream standIn = new ByteArrayOutputStream(); // Temp stream for reult

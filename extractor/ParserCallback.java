@@ -5,9 +5,12 @@ import javax.swing.text.*;
 
 /**
  * Parser callback class. This will call the handler functions in the
- * WebSearch class.
+ * WebSearch class. 
  */
 class ParserCallback extends HTMLEditorKit.ParserCallback {
+    // FIXME: This should probably be an inner class of WebSearch.
+    
+    /// WebSeach this Callback belongs to
     WebSearch myParent;
     
     public ParserCallback(WebSearch theSearch) {

@@ -14,6 +14,7 @@ import gilbert.extractor.*;
 import gilbert.extractor.extractors.*;
 import gilbert.extractor.refiners.*;
 import gilbert.extractor.filters.*;
+import org.apache.log4j.*;
 
 /**
  * Updates Albrecht's VB client by sending UDP packets with the 
@@ -45,6 +46,8 @@ public class UDPUpdater {
     protected static boolean verbose = false;
     /// Update delay in seconds
     protected static int delay = 5;
+    /// Logger
+    protected static Logger logger = Logger.getLogger(UDPUpdater.class);
 
     /**
     * @param args the command line arguments
@@ -76,7 +79,7 @@ public class UDPUpdater {
         System.out.println("Communication socket initialized...");
         System.out.println("Starting update process.");
         while (true) {
-            Util.logMessage("UDPUpdate: Entering update loop.", Util.LOG_MESSAGE);
+            logger.info("UDPUpdate: Entering update loop.");
             try {
                 endRef.reset();
                 extractor.extract();
@@ -88,7 +91,7 @@ public class UDPUpdater {
                     DatagramPacket datagram = new DatagramPacket(data, data.length);
                     dSock.send(datagram);
                     waitObject.waitTime(5000);
-                    Util.logMessage("Sent Data: " + current, Util.LOG_MESSAGE);
+                    logger.info("Sent Data: " + current);
                 }
             } catch (IOException e) {
                 System.out.println("* Warning: Uncaught IOException: " + e.getMessage());

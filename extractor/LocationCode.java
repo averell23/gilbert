@@ -6,6 +6,7 @@
 
 package gilbert.extractor;
 import java.util.*;
+import org.apache.log4j.*;
 
 /**
  * Contains country names and codes for top-level domains
@@ -14,6 +15,9 @@ import java.util.*;
  * @version CVS $Revision$
  */
 public class LocationCode {
+    
+    /// Logger for this class
+    protected static Logger logger = Logger.getLogger(LocationCode.class);
     
     /**
      * Array with codes and names.
@@ -276,7 +280,6 @@ public class LocationCode {
         
     };
     
-    
     /**
      * Returns the location code for the given host/domain name string.
      */
@@ -290,14 +293,16 @@ public class LocationCode {
                 int code = 0;
                 try {
                     code = Integer.valueOf(cCodes[i][0]).intValue();
-                    Util.logMessage("LocationCode: Code for " + tld + " is " + code, Util.LOG_DEBUG);
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("LocationCode: Code for " + tld + " is " + code);
+                    }
                 } catch (NumberFormatException e) {
-                    Util.logMessage("LocationCode: Internal Error: " + e.getMessage(), Util.LOG_ERROR);
+                    logger.error("LocationCode: Internal Error: " + e.getMessage());
                 }
                 return code;
             }
         }
-        Util.logMessage("LocationCode: Code for " + tld + " not found.", Util.LOG_MESSAGE);
+        logger.warn("LocationCode: Code for " + tld + " not found.");
         return 0;
     }
     
@@ -315,12 +320,14 @@ public class LocationCode {
         locationCode = locationCode.toLowerCase();
         for (int i=0 ; i < cCodes.length ; i++) {
             if (cCodes[i][0].equals(locationCode)) {
-                Util.logMessage("LocationCode: Found String for code "
-                + locationCode + ": " + cCodes[i][2], Util.LOG_DEBUG);
+                if (logger.isDebugEnabled()) {
+                    logger.debug("LocationCode: Found String for code "
+                    + locationCode + ": " + cCodes[i][2]);
+                }
                 return cCodes[i][2];
             }
         }
-        Util.logMessage("Could not find location for code " + locationCode, Util.LOG_MESSAGE);
+        logger.warn("Could not find location for code " + locationCode);
         return "(unspecified location)";
     }
     
