@@ -43,8 +43,21 @@ public abstract class Refiner extends AbstractTransmutor {
     protected Vector postfilters;
     /// Indicates if postfiltering is off
     protected boolean postfiltering = false;
-    /** Creates new Refiner */
+    /// Maximum degree of relationship for incoming URLs. (0 is unbounded).
+    protected int maxDegree = 0;
+    /*
+     * If the refiner passes original the input URLs on to the output, this
+     * should be true. Most Refiners <i>should</i> pass the original
+     * input to the output, but there may be cases where this is not
+     * desirable. Each subclass of should set this to a sensible
+     * default and <b>only</b> offer a setter method when it is
+     * sensible for the user to change that default.<br/>
+     * 
+     * Changes to the original URL will be passed on as well.
+     */
+    protected boolean passing = false;
     
+    /** Creates new Refiner */
     public Refiner() {
         prefilters = new Vector();
         postfilters = new Vector();
@@ -58,6 +71,24 @@ public abstract class Refiner extends AbstractTransmutor {
             e.printStackTrace();
             // System.exit(1);
         }
+    }
+    
+    /**
+     * Sets the maximum degree of relationship (relative to the original URL).
+     * @param degree The maximum degree of relationship. A value of 0 will
+     *               disable this feature, negative values will be ignored.
+     */
+    public void setMaxDegree(int degree) {
+        if (degree >= 0) {
+            maxDegree = degree;
+        }
+    }
+    
+    /**
+     * Returns the maximum level of relationship allowed for this refiner.
+     */
+    public int getMaxDegree() {
+        return maxDegree;
     }
     
     /**
@@ -141,16 +172,27 @@ public abstract class Refiner extends AbstractTransmutor {
      * the prefiltering and then calls the <code>handleURL</code> method.
      */
     protected void recieveURL(VisitorURL url) {
-        if (prefiltering) {
-            boolean accepted = true;
-            Enumeration filters = prefilters.elements();
-            while (filters.hasMoreElements()) {
-                URLFilter nextFilter = (URLFilter) filters.nextElement();
-                accepted = accepted && nextFilter.accept(url);
+        Integer degInt = new Integer(url.getProperty("url.degree"));
+        int degree = degInt.intValue();
+        if ((degree == 0) || (degree <= maxDegree)) {
+            if (prefiltering) {
+                boolean accepted = true;
+                Enumeration filters = prefilters.elements();
+                while (filters.hasMoreElements()) {
+                    URLFilter nextFilter = (URLFilter) filters.nextElement();
+                    accepted = accepted && nextFilter.accept(url);
+                }
+                if (!accepted) return;
             }
-            if (!accepted) return;
+        } else {
+            Util.logMessage("Refiner: URL with degree " + degree + " dropped, max. degree was " + maxDegree, Util.LOG_MESSAGE);
         }
         handleURL(url);
+        if (passing) {
+            printURL(url);
+        } else {
+            Util.logMessage("Refiner: URL not passed, passing disabled.", Util.LOG_DEBUG);
+        }
     }
     
     /**
@@ -162,23 +204,23 @@ public abstract class Refiner extends AbstractTransmutor {
      * are the URLs keywords, which are handled specially..)
      */
     protected void printURL(VisitorURL vUrl) {
-            Enumeration keys = vUrl.propertyNames();
-            startTag("url");
-            while (keys.hasMoreElements()) {
-                String curKey = (String) keys.nextElement();
-                String[] splitKey = curKey.split("\\.");
-                // NOTE AGAIN: We will look only at the second element
-                // NO NESTED ELEMENTS WILL BE PRINTED!
-                if (splitKey.length == 2) {
-                    printTag(splitKey[1], vUrl.getProperty(curKey));
-                }
+        Enumeration keys = vUrl.propertyNames();
+        startTag("url");
+        while (keys.hasMoreElements()) {
+            String curKey = (String) keys.nextElement();
+            String[] splitKey = curKey.split("\\.");
+            // NOTE AGAIN: We will look only at the second element
+            // NO NESTED ELEMENTS WILL BE PRINTED!
+            if (splitKey.length == 2) {
+                printTag(splitKey[1], vUrl.getProperty(curKey));
             }
-            // Print the keywords
-            Enumeration keyList = vUrl.getKeywords().elements();
-            while (keyList.hasMoreElements()) {
-                printTag("keyword", (String) keyList.nextElement());
-            }
-            endTag("url");
+        }
+        // Print the keywords
+        Enumeration keyList = vUrl.getKeywords().elements();
+        while (keyList.hasMoreElements()) {
+            printTag("keyword", (String) keyList.nextElement());
+        }
+        endTag("url");
     }
     
     /**
@@ -190,5 +232,15 @@ public abstract class Refiner extends AbstractTransmutor {
      * the postfilters.
      */
     public abstract void handleURL(VisitorURL url);
+    
+    
+    /**
+     * Returns true if the Refiner passes the input URLs to the
+     * output.
+     */
+    public boolean isPassing() {
+        return passing;
+    }
+    
     
 }
