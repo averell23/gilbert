@@ -5,6 +5,8 @@
  */
 
 package gilbert.extractor;
+import gilbert.extractor.extractors.*;
+import gilbert.extractor.filters.*;
 
 /**
  *
@@ -23,6 +25,7 @@ public class ExtractorTest {
         }
         Util.setLogLevel(Util.LOG_DEBUG);
         Extractor x = new ResolvingExtractor();
+        x.addPrefilter(new LocalVisitFilter());
         x.extract(args[0]);
     }
 

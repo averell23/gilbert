@@ -16,9 +16,22 @@ import java.util.*;
  * @version CVS $Revision$
  */
 public class VisitorURL extends java.util.Properties {
-
+    /// Vector for the keywords
+    protected Vector keywords;
+    
     /** Creates new URL */
     public VisitorURL() {
+        keywords = new Vector();
     }
 
+    /** Adds a new keyword to this record */
+    public void addKeyword(String x) {
+        keywords.add(x);
+    }
+    
+    /** Returns the keyword vector */
+    public Vector getKeywords() {
+        return keywords;
+    }
 }
+

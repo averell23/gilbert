@@ -150,7 +150,8 @@ public abstract class Refiner extends AbstractTransmutor {
      * efficient than directly printing the information, however it has
      * the advantage that all URL information is retained.<br>
      * <b>Note:</b> For quicker writing it is assumed that the URL
-     * object has no "nested elements".
+     * object has no "nested elements". (The only exception to this
+     * are the URLs keywords, which are handled specially..)
      */
     protected void printURL(VisitorURL vUrl) {
             Enumeration keys = vUrl.propertyNames();
@@ -163,6 +164,11 @@ public abstract class Refiner extends AbstractTransmutor {
                 if (splitKey.length == 2) {
                     printTag(splitKey[1], vUrl.getProperty(curKey));
                 }
+            }
+            // Print the keywords
+            Enumeration keyList = vUrl.getKeywords().elements();
+            while (keyList.hasMoreElements()) {
+                printTag("keyword", (String) keyList.nextElement());
             }
             endTag("url");
     }

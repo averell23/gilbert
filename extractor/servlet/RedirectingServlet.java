@@ -11,6 +11,8 @@ import java.io.*;
 import java.util.*;
 import java.net.*;
 import gilbert.extractor.*;
+import gilbert.extractor.extractors.*;
+import gilbert.extractor.refiners.*;
 
 /**
  * Servlet that redirects the client to a found page

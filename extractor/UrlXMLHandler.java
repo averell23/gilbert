@@ -44,7 +44,19 @@ public class UrlXMLHandler extends AbstractXMLHandler {
         StringBuffer data = new StringBuffer();
         StringBuffer key = new StringBuffer();
         
-        if (!localName.equals("url")) {
+        if (localName.equals("keyword")) {
+            // Handle the "normal" entries
+            while (top instanceof StringBuffer) {
+                data.append((StringBuffer) top);
+                top = tagStack.pop();
+            }
+            String startTag = (String) top;
+            if (!startTag.equals(localName)) {
+                throw(new org.xml.sax.SAXException("Tag <" + startTag + "> ended by <" + localName + ">"));
+            }
+            currentUrl.addKeyword(data.toString());
+            Util.logMessage("Added keyword: " + data, Util.LOG_DEBUG);
+        } else if (!localName.equals("url")) {
             while (top instanceof StringBuffer) {
                 data.append((StringBuffer) top);
                 top = tagStack.pop();

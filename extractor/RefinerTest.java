@@ -6,6 +6,8 @@
 
 package gilbert.extractor;
 import java.util.*;
+import gilbert.extractor.refiners.*;
+import gilbert.extractor.filters.*;
 
 /**
  *
@@ -27,7 +29,7 @@ public class RefinerTest {
             System.exit(1);
         }
         // Util.setLogLevel(Util.LOG_DEBUG);
-        Refiner x = new SearchingRefiner(true, "ubicomp");
+        Refiner x = new MetaRefiner();
         x.refine(args[0]);
         /* Enumeration e = x.getUrlList().elements();
         while (e.hasMoreElements()) {

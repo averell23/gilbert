@@ -11,6 +11,8 @@ import java.io.*;
 import java.net.*;
 import org.xml.sax.*;
 import gilbert.extractor.*;
+import gilbert.extractor.extractors.*;
+import gilbert.extractor.refiners.*;
 
 /**
  * Java Bean to be used as an interface between the Extractor classes

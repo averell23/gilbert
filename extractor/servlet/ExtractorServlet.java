@@ -9,6 +9,8 @@
 import javax.servlet.*;
 import javax.servlet.http.*;
 import gilbert.extractor.*;
+import gilbert.extractor.extractors.*;
+import gilbert.extractor.refiners.*;
 import java.io.*;
 import java.util.*;
 import org.xml.sax.*;

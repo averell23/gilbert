@@ -42,6 +42,10 @@ public class StraightExtractor extends Extractor {
             if (Util.isAlive(host)) {
                 startTag("url");
                 printTag("name", "http://" + host + "/");
+                String location = v.getProperty("visit.location_code");
+                if (location != null) printTag("location_code", location);
+                String time = v.getProperty("visit.timestamp");
+                if (time != null) printTag("timestamp", time);
                 endTag("url");
             }
             StringBuffer buf = new StringBuffer(host);
@@ -58,6 +62,8 @@ public class StraightExtractor extends Extractor {
                         printTag("name", "http://" + subdom + "/");
                         String location = v.getProperty("visit.location_code");
                         if (location != null) printTag("location_code", location);
+                        String time = v.getProperty("visit.timestamp");
+                        if (time != null) printTag("timestamp", time);
                         endTag("url");
                     }
                     visitHash.put(subdom, "visited");
@@ -65,6 +71,5 @@ public class StraightExtractor extends Extractor {
                 pos = buf.indexOf(".", pos + 1);
             }
         }
-        
     }
 }
