@@ -17,8 +17,6 @@ import org.apache.log4j.*;
  * @author  daniel
  */
 public class SimpleExtractor extends Extractor {
-    /** Hashtable containing alredy visited hosts */
-    Hashtable visitHash;
     /// Logger for this class.
     protected Logger logger;
     
@@ -41,8 +39,7 @@ public class SimpleExtractor extends Extractor {
     protected void handleVisit(Visit v) {
          String host = v.getProperty("visit.host");
         if (logger.isInfoEnabled()) logger.info("Handling host: " + host);
-        if ((!visitHash.containsKey(host)) && (Util.hostnameType(host) == Util.HOST_NAME)) {
-            visitHash.put(host, "visited");
+        if (Util.hostnameType(host) == Util.HOST_NAME) {
             if (logger.isDebugEnabled()) logger.debug("New hostname: " + host);
             startTag("url");
             printTag("name", "http://" + host + "/");
@@ -50,6 +47,8 @@ public class SimpleExtractor extends Extractor {
             if (location != null) printTag("location_code", location);
             String time = v.getProperty("visit.timestamp");
             if (time != null) printTag("timestamp", time);
+            String referer = v.getProperty("visit.referer.url");
+            if (referer != null) printTag("referer", referer);
             printTag("degree", "0");
             endTag("url");
         }

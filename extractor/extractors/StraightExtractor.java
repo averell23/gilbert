@@ -19,8 +19,6 @@ import org.apache.log4j.*;
  * @version CVS $Revision$
  */
 public class StraightExtractor extends Extractor {
-    /// Hash for all entries that have already been extracted.
-    Hashtable visitHash;
     /// HTTP connection timeout backup
     String connectTO;
     /// HTTP read timeout backup
@@ -46,8 +44,7 @@ public class StraightExtractor extends Extractor {
     protected void handleVisit(Visit v) {
         String host = v.getProperty("visit.host");
         if (logger.isInfoEnabled()) logger.info("Handling host: " + host);
-        if ((!visitHash.containsKey(host)) && (Util.hostnameType(host) == Util.HOST_NAME)) {
-            visitHash.put(host, "visited");
+        if (Util.hostnameType(host) == Util.HOST_NAME) {
             if (logger.isDebugEnabled()) logger.debug("New hostname: " + host);
             if (Util.siteStatus("http://" + host + "/").getAlive()) {
                 startTag("url");
@@ -56,6 +53,8 @@ public class StraightExtractor extends Extractor {
                 if (location != null) printTag("location_code", location);
                 String time = v.getProperty("visit.timestamp");
                 if (time != null) printTag("timestamp", time);
+                String referer = v.getProperty("visit.referer.url");
+                if (referer != null) printTag("referer", referer);
                 endTag("url");
             }
             StringBuffer buf = new StringBuffer(host);
