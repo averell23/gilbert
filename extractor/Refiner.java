@@ -39,9 +39,11 @@ public abstract class Refiner extends AbstractTransmutor {
     protected Vector prefilters;
     /// Indicates if prefiltering is on
     protected boolean prefiltering = false;
-    /// Vector containing the postfilters
     /// Maximum degree of relationship for incoming URLs. (0 is unbounded).
     protected int maxDegree = 0;
+    /// Hash for the URLs already visited
+    protected Hashtable visitCache;
+    
     /*
      * If the refiner passes original the input URLs on to the output, this
      * should be true. Most Refiners <i>should</i> pass the original
@@ -49,13 +51,14 @@ public abstract class Refiner extends AbstractTransmutor {
      * desirable. Each subclass of should set this to a sensible
      * default and <b>only</b> offer a setter method when it is
      * sensible for the user to change that default.<br/>
-     * 
+     *
      * Changes to the original URL will be passed on as well.
      */
     protected boolean passing = false;
     
     /** Creates new Refiner */
     public Refiner() {
+        visitCache = new Hashtable();
         prefilters = new Vector();
         try {
             parser = XMLReaderFactory.createXMLReader("org.apache.xerces.parsers.SAXParser");
@@ -135,7 +138,9 @@ public abstract class Refiner extends AbstractTransmutor {
     /**
      * This does the same as <code>refineBlank</code> but inserts the start
      * and end Tags for the <url_list> on the output stream. This is the
-     * standard behaviour, but child class may override it.
+     * standard behaviour, but child class may override it. This will only
+     * called once for each URL, subsequent occurences of the same URL will
+     * be ignored.
      */
     public void refine(InputSource input) {
         outStream.println("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
@@ -176,7 +181,13 @@ public abstract class Refiner extends AbstractTransmutor {
         } else {
             Util.logMessage("Refiner: URL with degree " + degree + " dropped, max. degree was " + maxDegree, Util.LOG_MESSAGE);
         }
-        handleURL(url);
+        String uName = url.getProperty("url.name");
+        if (!visitCache.containsKey(uName)) { 
+            handleURL(url);
+            visitCache.put(uName, url);
+        } else {
+            Util.logMessage("Refiner: Ignored duplicate url " + uName, Util.LOG_DEBUG);
+        }
         if (passing) {
             printURL(url);
         } else {
