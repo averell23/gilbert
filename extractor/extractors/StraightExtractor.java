@@ -8,6 +8,7 @@ package gilbert.extractor.extractors;
 import org.xml.sax.*;
 import gilbert.extractor.*;
 import java.util.*;
+import org.apache.log4j.*;
 
 /**
  * This is a simple Extractor, taking URLs directly from hostnames. This
@@ -24,6 +25,8 @@ public class StraightExtractor extends Extractor {
     String connectTO;
     /// HTTP read timeout backup
     String readTO;
+    /// Logger for this class
+    protected Logger logger;
     
     /**
      * Creates a new StraightExtractor.
@@ -31,7 +34,9 @@ public class StraightExtractor extends Extractor {
      */
     public StraightExtractor() {
         super();
+        logger = Logger.getLogger(this.getClass());
         visitHash = new Hashtable();
+        logger.debug("Created.");
     }
     
     /**
@@ -40,11 +45,11 @@ public class StraightExtractor extends Extractor {
      */
     protected void handleVisit(Visit v) {
         String host = v.getProperty("visit.host");
-        Util.logMessage("Straight Extractor: Handling host: " + host, Util.LOG_MESSAGE);
+        if (logger.isInfoEnabled()) logger.info("Handling host: " + host);
         if ((!visitHash.containsKey(host)) && (Util.hostnameType(host) == Util.HOST_NAME)) {
             visitHash.put(host, "visited");
-            Util.logMessage("New hostname: " + host, Util.LOG_DEBUG);
-            if (Util.isAlive(host)) {
+            if (logger.isDebugEnabled()) logger.debug("New hostname: " + host);
+            if (Util.siteStatus("http://" + host + "/").getAlive()) {
                 startTag("url");
                 printTag("name", "http://" + host + "/");
                 String location = v.getProperty("visit.location_code");
@@ -61,8 +66,8 @@ public class StraightExtractor extends Extractor {
             while ((pos < lastPart) && (pos != -1)) {
                 String subdom = "www" + buf.substring(pos);
                 if (!visitHash.containsKey(subdom)) {
-                    if (Util.isAlive(subdom)) {
-                        Util.logMessage("\tFound URL: " + subdom, Util.LOG_DEBUG);
+                    if (Util.siteStatus("http://" + subdom + "/").getAlive()) {
+                        if (logger.isDebugEnabled()) logger.debug("Found URL: " + subdom);
                         startTag("url");
                         printTag("name", "http://" + subdom + "/");
                         String location = v.getProperty("visit.location_code");
@@ -81,13 +86,13 @@ public class StraightExtractor extends Extractor {
     
     public void extract(String uri) {
         visitHash = new Hashtable();
-        Util.logMessage("StraightExtractor initialized.", Util.LOG_MESSAGE);
+        logger.info("Initialized.");
         super.extract(uri);
     }
     
     public void extract(InputSource input) {
         visitHash = new Hashtable();
-        Util.logMessage("StraightExtractor initialized.", Util.LOG_MESSAGE);
+        logger.info("Initialized.");
         super.extract(input);
     }
 }

@@ -7,6 +7,7 @@
 package gilbert.extractor.extractors;
 import java.net.*;
 import gilbert.extractor.*;
+import org.apache.log4j.*;
 
 /**
  * This should work exactly as the <code>StraightExtractor</code>, except
@@ -18,18 +19,20 @@ import gilbert.extractor.*;
  * @version CVS $Revision$
  */
 public class ResolvingExtractor extends StraightExtractor {
+    /// Logger for this class
+    protected Logger logger;
 
     protected void handleVisit(Visit v) {
+        logger = Logger.getLogger(this.getClass());
         String host = v.getProperty("visit.host");
-        Util.logMessage("Resolver: Original hostname is: " + host, Util.LOG_DEBUG);
+        if (logger.isDebugEnabled()) logger.debug("Original hostname is: " + host);
         try {
             InetAddress addy = InetAddress.getByName(host);
             host = addy.getHostName();
-            Util.logMessage("Reset hostname to: " + host, Util.LOG_DEBUG);
+            if (logger.isDebugEnabled()) logger.debug("Reset hostname to: " + host);
             v.setProperty("visit.host", host);
         } catch (UnknownHostException e) {
-            Util.logMessage("ResolvingExtractor: Warning: Cannot resolve host " + host, Util.LOG_WARN);
-            Util.logMessage("Exception: " + e.getMessage(), Util.LOG_WARN);
+            logger.info("Cannot resolve host " + host + " (" + e.getMessage() + ")");
         }
         super.handleVisit(v);
     }

@@ -9,6 +9,7 @@ package gilbert.extractor.extractors;
 import gilbert.extractor.*;
 import java.util.*;
 import org.xml.sax.*;
+import org.apache.log4j.*;
 
 /**
  * Finds a start URL by simply using the visit's source.
@@ -18,9 +19,12 @@ import org.xml.sax.*;
 public class SimpleExtractor extends Extractor {
     /** Hashtable containing alredy visited hosts */
     Hashtable visitHash;
+    /// Logger for this class.
+    protected Logger logger;
     
     /** Creates a new instance of SimpleExtractor */
     public SimpleExtractor() {
+        logger = Logger.getLogger(this.getClass());
         visitHash = new Hashtable();
     }
     
@@ -36,10 +40,10 @@ public class SimpleExtractor extends Extractor {
      */
     protected void handleVisit(Visit v) {
          String host = v.getProperty("visit.host");
-        Util.logMessage("SimpleExtractor: Handling host: " + host, Util.LOG_MESSAGE);
+        if (logger.isInfoEnabled()) logger.info("Handling host: " + host);
         if ((!visitHash.containsKey(host)) && (Util.hostnameType(host) == Util.HOST_NAME)) {
             visitHash.put(host, "visited");
-            Util.logMessage("New hostname: " + host, Util.LOG_DEBUG);
+            if (logger.isDebugEnabled()) logger.debug("New hostname: " + host);
             startTag("url");
             printTag("name", "http://" + host + "/");
             String location = v.getProperty("visit.location_code");
@@ -53,13 +57,13 @@ public class SimpleExtractor extends Extractor {
     
     public void extract(String uri) {
         visitHash = new Hashtable();
-        Util.logMessage("SimpleExtractor initialized.", Util.LOG_MESSAGE);
+        logger.info("Initializing.");
         super.extract(uri);
     }
     
     public void extract(InputSource input) {
         visitHash = new Hashtable();
-        Util.logMessage("SimpleExtractor initialized.", Util.LOG_MESSAGE);
+        logger.info("Initializing.");
         super.extract(input);
     }
 }
