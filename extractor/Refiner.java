@@ -169,7 +169,7 @@ public abstract class Refiner extends AbstractTransmutor {
         } catch (NumberFormatException e) {
             Util.logMessage("Could not determine degree: " + e.getMessage(), Util.LOG_ERROR);
         }
-        if ((degree == 0) || (degree <= maxDegree)) {
+        if ((maxDegree == 0) || (degree <= maxDegree)) {
             if (prefiltering) {
                 boolean accepted = true;
                 Enumeration filters = prefilters.elements();
