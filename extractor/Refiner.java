@@ -46,6 +46,8 @@ public abstract class Refiner extends AbstractTransmutor {
     /** Creates new Refiner */
     
     public Refiner() {
+        prefilters = new Vector();
+        postfilters = new Vector();
         try {
             parser = XMLReaderFactory.createXMLReader("org.apache.xerces.parsers.SAXParser");
             UrlXMLHandler tHandler = new UrlXMLHandler(this);
