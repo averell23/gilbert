@@ -99,7 +99,7 @@ public class Util {
             try {
                 u = new URL(urlStr);
                 conn = (HttpURLConnection) u.openConnection();
-                conn.setRequestMethod("HEAD");
+                conn.setRequestMethod("GET");
                 conn.connect();
                 int resCode = conn.getResponseCode();
                 Util.logMessage("Got return code: " + resCode, Util.LOG_DEBUG);
@@ -111,6 +111,7 @@ public class Util {
                     DocumentParser parser = new DocumentParser(DTD.getDTD("HTML"));
                     HTMLEditorKit.ParserCallback pc = new Util.InternalParserCallback(retVal);
                     parser.parse(new InputStreamReader(conn.getInputStream()), pc, true);
+                    Util.logMessage("Site Status parser finished.", LOG_DEBUG);
                 } else {
                     Util.logMessage("Site Status parsing: Ignored URL with non-html type: " + contentType + "(" + urlStr + ")", Util.LOG_MESSAGE);
                 }
@@ -262,10 +263,12 @@ public class Util {
          *             information from this parser.
          */
         public InternalParserCallback(SiteInfo info) {
+            Util.logMessage("Internal Callback initializing...", Util.LOG_DEBUG);
             this.info = info;
         }
         
         public void handleStartTag(HTML.Tag tag, MutableAttributeSet a, int pos) {
+            Util.logMessage("Site Status Parser: Start Tag Handler called.", Util.LOG_DEBUG);
             // check for the <title> tag
             if (tag.equals(HTML.Tag.TITLE)) {
                 Util.logMessage("Site Info Parser: Started Title Tag.", Util.LOG_DEBUG);
@@ -295,6 +298,7 @@ public class Util {
         }
         
         public void handleEndTag(HTML.Tag tag, int pos) {
+            Util.logMessage("Site Info Parser: End tag handler called", Util.LOG_DEBUG);
             if (tag.equals(HTML.Tag.TITLE)) {
                 parseTitle = false;
                 info.setMetaTitle(titleBuffer.toString());
@@ -304,12 +308,14 @@ public class Util {
         }
         
         public void handleText(char[] data, int pos) {
+            Util.logMessage("Site Info Parser: Text Handler called", Util.LOG_DEBUG);
             if (parseTitle) {
                 titleBuffer.append(data);
             }
         }
         
         public void handleSimpleTag(HTML.Tag tag, MutableAttributeSet a, int pos) {
+            Util.logMessage("Site Info: Simple Tag Handler called.", Util.LOG_DEBUG);
             if (tag.equals(HTML.Tag.A) && a.isDefined(HTML.Attribute.HREF)) {
                 String attrib = a.getAttribute(HTML.Attribute.HREF).toString().toLowerCase();
                 if (attrib.startsWith("http:")) {
@@ -325,7 +331,15 @@ public class Util {
                     info.addLink(attrib);
                      */
                     Util.logMessage("Site Info Parser: Internal link (ignored):" + attrib, Util.LOG_MESSAGE);
-                } else if (attrib.matches("^:.*(tml$|tml#.*)")) {
+                } else if (attrib.startsWith("/")) {
+                    // Internal absolute link
+                    String url = info.getUrl();
+                    int idx = url.indexOf("/", 8);
+                    if (idx != -1) url = url.substring(0,idx);
+                    attrib = url + attrib;
+                    Util.logMessage("Site Info Parser: Constructed link to internal document: " + attrib, Util.LOG_MESSAGE);
+                    info.addLink(attrib);
+                } else if (attrib.matches("[^:].*")) { // At the moment, match everything
                     // seems to be a relative link to another page.
                     String url = info.getUrl();
                     int idx = url.indexOf("?");
