@@ -36,12 +36,8 @@ public abstract class WebSearch {
      */
     public WebSearch() {
         logger = Logger.getLogger(this.getClass());
-        // Kludge for Proxy settings...
-        // FIXME: Proxy settings should go to global setting class
-        Properties sysProps = System.getProperties();
-        sysProps.setProperty("http.proxyHost", "wwwcache.lancs.ac.uk");
-        sysProps.setProperty("http.proxyPort", "8080");
-        logger.debug("System Properties set for proxy");
+       // Initialize global settings, if neccessary. (Proxy etc).
+        Util.init();
         myCallback = new ParserCallback();
     }
     

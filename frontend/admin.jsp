@@ -37,9 +37,9 @@
     List of extracted URLS:
     <ul>
         <%
-            Enumeration urlList = extractor.getUrls().elements();
-            while (urlList.hasMoreElements()) {
-                VisitorURL thisURL = (VisitorURL) urlList.nextElement();
+            Iterator urlList = extractor.getUrls().iterator();
+            while (urlList.hasNext()) {
+                VisitorURL thisURL = (VisitorURL) urlList.next();
         %>
         <li>Host: <%=thisURL.getProperty("url.name")%>
         <ul>
@@ -66,7 +66,7 @@
     Contents of the siteCache:
     <ul>
     <%
-        Hashtable liveKeys = Util.geSiteCache(); 
+        Hashtable liveKeys = Util.getSiteCache(); 
         Enumeration liveKeysL = liveKeys.keys();
         while (liveKeysL.hasMoreElements()) { 
             SiteInfo currentSite = (SiteInfo) liveKeys.get(liveKeysL.nextElement());

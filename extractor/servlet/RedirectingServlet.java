@@ -44,7 +44,10 @@ public class RedirectingServlet extends HttpServlet {
         oldSites.add(FALLBACK_URL);
         extractor = new ExtractingChain(DATA_SOURCE);
         extractor.setExtractor(new StraightExtractor());
-        extractor.addRefiner(new SearchingRefiner(true, "ubicomp,handheld,context"));
+        SearchingRefiner sRef = new SearchingRefiner();
+        sRef.setKeywords("ubicomp,handheld,context");
+        sRef.setPassing(false);
+        extractor.addRefiner(sRef);
         endRef = new VectorRefiner();
         extractor.addRefiner(endRef);
         timestamp = 0;

@@ -28,7 +28,7 @@ import org.apache.log4j.*;
  */
 public class ExtractorBean {
     /// Tree with pages that have been found previously
-    protected TreeMap currentSet;
+    protected TreeSet currentSet;
     /// Fallback URL
     protected VisitorURL fallbackUrl;
     /// URL for the data source.
@@ -53,21 +53,21 @@ public class ExtractorBean {
     protected String beanName;
     /// Static keywords...
     protected String keywords = "ubicomp,wearable,ubiquiotous,context,awareness,ambient";
-    /// Hash with the currently active URLs
-    protected Hashtable urlHash;
     
     /** Creates new ExtractorBean */
     public ExtractorBean() {
+        logger.debug("Creating ExtractorBean");
         // Create the Beans name
         synchronized (ExtractorBean.class) {
             beanName = "ExtractorBean:" + beanCount;
             beanCount++;
         }
         NDC.push(beanName);
-        currentSet = new TreeMap();
-        urlHash = new Hashtable();
+        currentSet = new TreeSet();
         fallbackUrl = new VisitorURL();
-        currentSet.put("nothing.html", new Double(0));
+        fallbackUrl.setProperty("url.name", "nothing.html");
+        currentSet.add(fallbackUrl);
+        extractor = createExtractingChain();
         
         timestamp = 0;
         NDC.pop();
@@ -99,7 +99,7 @@ public class ExtractorBean {
         kwr.setKeywords(keywords);
         kwr.setMaxHandlers(12);
         kwr.setWeight(0.5);
-        extractor.addRefiner(mkr);
+        extractor.addRefiner(kwr);
         
         Refiner meta = new MetaRefiner();
         DocumentTypeURLFilter docFilter = new DocumentTypeURLFilter();
@@ -110,6 +110,8 @@ public class ExtractorBean {
         endRef = new VectorRefiner();
         endRef.addPrefilter(new AliveFilter());
         extractor.addRefiner(endRef);
+        
+        return extractor;
     }
     
     public void setFallbackUrl(String fbu) {
@@ -130,6 +132,13 @@ public class ExtractorBean {
     }
     
     
+    /**
+     * Returns the URLs
+     */
+    public Collection getUrls() {
+        return currentSet.tailSet(currentSet.first());
+    }
+    
     public void setTimeout(long to) {
         timeOut = to;
     }
@@ -137,26 +146,19 @@ public class ExtractorBean {
     public long getTimeout() {
         return timeOut;
     }
-    
+      
     /**
-     * This gets the Vector containing the Urls
-     */
-    public Enumeration getUrls() {
-        return urlHash.elements();
-    }
-    
-    /**
-     * This gets the timestamp of the last extraction
+     * Gets the timestamp of the last extraction
      */
     public long getTimestamp() {
         return timestamp;
     }
     
     /**
-     * This will update the internal data. If the timeout is reached, the
+     * Updates the internal data. If the timeout is reached, the
      * extraction process will be started anew.
      */
-    public void update() throws IOException {
+    public synchronized void update() throws IOException {
         /* Calculate the real time out. Take into account the failures for backoff time. */
         long realTimeout = (failures == 0)?timeOut:((long) (timeOut * ((failures - 1) * 0.25)));
         logger.debug("Real timeout calculated to: " + (realTimeout / 1000));
@@ -169,13 +171,14 @@ public class ExtractorBean {
             endRef.reset();
             extractor.extract();
             Vector tmpSet = endRef.getUrlList();
+            currentSet = new TreeSet();
             if (tmpSet.size() != 0) {
                 Enumeration tmpE = tmpSet.elements();
+                if (logger.isDebugEnabled()) logger.debug("Trying to add " + tmpSet.size() + " elements.");
                 while (tmpE.hasMoreElements()) {
                     VisitorURL v = (VisitorURL) tmpE.nextElement();
-                    String name = v.getProperty("url.name");
-                    if (!currentSet.containsKey(name)) {
-                        double interest = 0;
+                    if (!currentSet.contains(v)) {
+                        /* double interest = 0;
                         try {
                             String interestStr = v.getProperty("url.interest");
                             if (interestStr != null) {
@@ -185,14 +188,20 @@ public class ExtractorBean {
                             }
                         } catch (NumberFormatException e) {
                             logger.warn("Refined URL without proper interest found");
+                        } */
+                        currentSet.add(v);
+                    } else {
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("Did not add duplicate URL: " + v.getProperty("url.name"));
                         }
-                        currentSet.put(name, new Double(interest));
                     }
                 }
+                if (logger.isDebugEnabled()) logger.debug(currentSet.size() + " URLs present in Bean.");
                 
                 timestamp = System.currentTimeMillis();
                 failures = 0;
             } else {
+                currentSet.add(fallbackUrl);
                 logger.warn("ExtractorBean: Extraction failed (no results)");
                 if (failures < maxBackoff) failures++; // increase the failure counter..
                 timestamp = System.currentTimeMillis();

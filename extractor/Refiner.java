@@ -18,7 +18,6 @@ import org.xml.sax.helpers.DefaultHandler;
 import java.io.*;
 import java.util.*;
 import org.apache.log4j.*;
-import org.apache.log4j.*;
 
 /**
  * This refines an existing URL list. It takes URLs from a XML URL list,
@@ -181,7 +180,7 @@ public abstract class Refiner extends AbstractTransmutor implements Runnable {
             }
             wob.finish();
             wob.notifyAll();
-            logger.debug("Finalizing Refiner Thread.");
+            logger.debug("Finalizing main Refiner Thread.");
         }
     }
     

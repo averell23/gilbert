@@ -121,6 +121,7 @@ public abstract class Extractor extends AbstractTransmutor implements Runnable {
                 }
             }
         }
+        logger.debug("Handlers finished.");
         outStream.println("</url_list>");
     }
     

@@ -9,6 +9,7 @@ package gilbert.extractor.refiners;
 import java.util.*;
 import java.net.*;
 import gilbert.extractor.*;
+import org.apache.log4j.*;
 
 /**
  * Refines into an internal <code>Vector</code>, rather than to the output
@@ -21,6 +22,8 @@ import gilbert.extractor.*;
 public class VectorRefiner extends Refiner {
     /** The internal URL Vector */
     protected Vector urlList;
+    /// logger for this class.
+    protected static Logger logger = Logger.getLogger(VectorRefiner.class);
 
     /** Creates new VectorRefiner */
     public VectorRefiner() {
@@ -37,6 +40,7 @@ public class VectorRefiner extends Refiner {
      * the postfilters.
      */
     public void handleURL(VisitorURL url) {
+        if (logger.isDebugEnabled()) logger.debug("Adding URL to Vector: " + url.getProperty("url.name"));
         urlList.add(url);
     }
     

@@ -33,7 +33,10 @@ public class ExtractorServlet extends HttpServlet {
         super.init(config);
         extractorChain = new ExtractingChain(DATA_HOME);
         extractorChain.setExtractor(new StraightExtractor());
-        extractorChain.addRefiner(new SearchingRefiner(true, "ubicomp,handheld,context"));
+        SearchingRefiner sRef = new SearchingRefiner();
+        sRef.setKeywords("ubicom,handheld,context");
+        sRef.setPassing(true);
+        extractorChain.addRefiner(sRef);
         extractorChain.addRefiner(new HtmlRefiner());
         Util.setLogLevel(Util.LOG_DEBUG);
     }

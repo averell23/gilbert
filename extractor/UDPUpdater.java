@@ -47,12 +47,15 @@ public class UDPUpdater {
     /// Update delay in seconds
     protected static int delay = 5;
     /// Logger
-    protected static Logger logger = Logger.getLogger(UDPUpdater.class);
+    protected static Logger logger;
 
     /**
     * @param args the command line arguments
     */
     public static void main (String args[]) {
+        Logger logger = Logger.getLogger(UDPUpdater.class);
+        PropertyConfigurator.configure("gilbert/extractor/log4j.properties");
+        
         UDPUpdater waitObject = new UDPUpdater(); // I know it's a kludge but we need an object to wait on. sorry.
         parseCommandLine(args);
         if (verbose) {
@@ -63,16 +66,6 @@ public class UDPUpdater {
             System.out.println();
         }
         System.out.println("UDP Update Server starting up...");
-        OutputStream out = null;
-        try {
-            out = new FileOutputStream(logfileName);
-        } catch (IOException e) {
-            System.out.println("*** Error: Could not open log file " + logfileName);
-            System.out.println("*** Aborting");
-            System.exit(1);
-        }
-        Util.setLogStream(new PrintStream(out));
-        System.out.println("Log File opened: " + logfileName);
         init();
         System.out.println("Internal objects initialized...");
         setupCom();
@@ -132,11 +125,7 @@ public class UDPUpdater {
      * Initializes the inernal objects.
      */
     static void init() {
-        if (verbose) {
-            Util.setLogLevel(Util.LOG_DEBUG);
-        } else {
-            Util.setLogLevel(Util.LOG_MESSAGE);
-        }
+        // FIXME: All  below should be configurable via the command line
         currentSet = new Vector();
         fallbackUrl = new VisitorURL();
         fallbackUrl.setProperty("url.name", "nothing.html");
@@ -146,7 +135,10 @@ public class UDPUpdater {
         ext.addPrefilter(new LocalVisitFilter());
         ext.addPrefilter(new AgentVisitFilter());
         extractor.setExtractor(ext);
-        extractor.addRefiner(new SearchingRefiner(true, "ubicomp,handheld,context"));
+        SearchingRefiner sRef = new SearchingRefiner();
+        sRef.setKeywords("ubicomp,handheld,context");
+        sRef.setPassing(true);
+        extractor.addRefiner(sRef);
         Refiner meta = new MetaRefiner();
         DocumentTypeURLFilter docFilter = new DocumentTypeURLFilter();
         docFilter.addDocumentType("text/html");
@@ -169,10 +161,10 @@ public class UDPUpdater {
                     System.out.println("Where options are:");
                     System.out.println("  -datasource <src uri> - URI of the data source.");
                     System.out.println("  -port <port>          - Port to connect to (" + port + ")");
-                    System.out.println("  -log <logfile>        - Name of the logfile (" + logfileName + ")");
                     System.out.println("  -delay <update delay> - Minimum delay between updates in sec. (" + delay + ")");
-                    System.out.println("  -verbose              - Turn on verbose logging (off)");
                     System.out.println("  -help                 - Print this message.");
+                    System.out.println();
+                    System.out.println("Logging can be configured through the log4.properties.");
                     System.out.println();
                     System.exit(0);
                 } else if (args[i].equals("-datasource")) {
@@ -196,14 +188,6 @@ public class UDPUpdater {
                         System.out.println("*** -port must be followed by port number");
                         System.exit(1);
                     }
-                } else if (args[i].equals("-log")) {
-                    i++;
-                    if ((i < args.length) && !args[i].startsWith("-")) {
-                        logfileName = args[i];
-                    } else {
-                        System.out.println("*** -log must be followed by logfile name");
-                        System.exit(1);
-                    }
                 } else if (args[i].equals("-delay")) {
                     i++;
                     if ((i < args.length) && !args[i].startsWith("-")) {
@@ -217,8 +201,6 @@ public class UDPUpdater {
                         System.out.println("*** -delay must be followed by delay interval");
                         System.exit(1);
                     }
-                } else if (args[i].equals("-verbose")) {
-                    verbose = true;
                 } else {
                     System.out.println("*** Unknown option: " + args[i]);
                     System.exit(1);

@@ -47,12 +47,26 @@
         if ((turnPar == null) || (turnPar.equals("on"))) { // Should preserve state when switching reload off...
             // set the base URI for the state
             state.setBaseURI(request.getRequestURI());
+            logger.debug("Updating URL selection now.");
             // select a new URL to show
             extractor.update();
-            Vector extractedURLs = extractor.getUrls();
-            int selection = (int) (Math.random() * (extractedURLs.size() - 1));
-            selUrl = ((Properties) extractedURLs.get(selection)).getProperty("url.name");
-            if (logger.isDebugEnabled()) logger.debug("Update cycle selected: " + selUrl);
+            logger.debug("Update call returned.");
+            Collection extractedURLs = extractor.getUrls();
+            if (extractedURLs.size() > 0) {
+                int selection = (int) ((Math.random() * extractedURLs.size()) + 1);
+                if (selection > extractedURLs.size()) selection--;
+                if (logger.isDebugEnabled()) logger.debug("Going to select URL no. " + selection + " of " + extractedURLs.size());
+                Iterator extractedIterator = extractedURLs.iterator();
+                Object selO = null;
+                for (int i = 0 ; i < selection ; i++) {
+                    selO = extractedIterator.next();
+                }
+                if (logger.isDebugEnabled()) logger.debug("Select object is an " + selO.getClass().getName());
+                selUrl = ((Properties) selO).getProperty("url.name");
+                if (logger.isDebugEnabled()) logger.debug("Update cycle selected: " + selUrl);
+            } else {
+                logger.warn("Could not update: No URL found.");
+            }
         }
     %>
 
@@ -76,6 +90,7 @@
     out.println("\"/>");
     NDC.pop();
 %>
+  <meta http-equiv="cache-control" content="no-cache" />
 </head>
 
 <%--

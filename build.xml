@@ -3,7 +3,7 @@
 <project name="gilbert" basedir=".." default="all">
     <target name="init">
         <tstamp/>
-        <property name="cvsroot" value="dhahn@ubicomp:/home/dhahn/.cvsroot" />
+        <property file="gilbert/extractor/build.properties" />
     </target>
 
     <target name="extractor_clean" depends="init">
@@ -24,7 +24,7 @@
     <target name="extractor_jar" depends="extractor_classes">
         <jar jarfile="gilbert/extractor.jar" 
              basedir="." 
-             includes="gilbert/extractor/**/*.class"
+             includes="gilbert/extractor/**/*.class,gilbert/io/**/*.class"
              excludes="gilbert/extractor/**/*Test*,gilbert/extractor/servlet/**"
         />
     </target>
@@ -58,10 +58,20 @@
             <classes dir="gilbert/extractor">
                 <include name="log4j.properties" />
             </classes>
+            <classes dir=".">
+                <include name="gilbert/extractor/gilbert.properties"/>
+            </classes>
         </war>
     </target>
+    
+    <target name="deploy_war" if="build.gilbert.webapps" depends="frontend_war">
+        <echo message="Deploying to ${build.gilbert.webapps}" />
+        <delete dir="${build.gilbert.webapps}/gilbert" />
+        <copy file="gilbert/gilbert.war" todir="${build.gilbert.webapps}" />
+    </target>
+    
     <target name="revision" depends="init">
-        <cvs dest="." command="update" cvsRoot="${cvsroot}" />
+        <cvs dest="." command="update" cvsRoot="${build.cvsroot}" />
 	<antcall target="frontend_war" />
     </target>
 </project>

@@ -22,19 +22,8 @@ import org.apache.log4j.*;
  */
 public class Util {
     
-    /*
-     * Init the system properties. That needs to be done only once.
-     */
-    static {
-        Logger logger = Logger.getLogger(Util.class);
-        Properties sysProps = System.getProperties();
-        sysProps.setProperty("http.proxyHost", "wwwcache.lancs.ac.uk");
-        sysProps.setProperty("http.proxyPort", "8080");
-        sysProps.setProperty("sun.net.client.defaultConnectTimeout", "20000");
-        sysProps.setProperty("sun.net.client.defaultReadTimeout", "20000");
-        logger.debug("Util static initialization complete.");
-    }
-    
+    /// Name of the properties file
+    public static final String PROP_RESOURCE = "gilbert/extractor/gilbert.properties";
     public static final int IP_ADDRESS = 1;
     public static final int HOST_NAME = 2;
     /// Output Stream for logging purposes
@@ -54,14 +43,96 @@ public class Util {
     /// Cache for site status of different urls...
     protected static Hashtable siteCache = new Hashtable();
     /// Timeout for live cache entries in seconds.
-    protected static int siteCacheTimeout = 5 * 60 * 60; // 5 hours should do...
+    protected static int siteCacheTimeout;
     /// Last cleanup of the siteCache
     protected static long cacheTimestamp = System.currentTimeMillis();
     /// Inteverval for cach cleanups in minutes
-    protected static int cleanupInterval = 15; // Thrice the time of the cache timeout
+    protected static int cleanupInterval;
     /// Logger for Util class
     protected static Logger logger = Logger.getLogger(Util.class);
+    /// Global Properties for gilbert
+    protected static Properties gilbertProps;
     
+    /*
+     * Init the system properties. That needs to be done only once.
+     */
+    static {
+        Logger logger = Logger.getLogger(Util.class);
+        Properties sysProps = System.getProperties();
+        logger.debug("Initializing Global Settings");
+        gilbertProps = new Properties();
+        try {
+            logger.debug("Loading Properties from resource.");
+            InputStream propRes = Util.class.getClassLoader().getResourceAsStream(PROP_RESOURCE);
+            if (propRes == null) throw(new IOException("Resource not found:" + PROP_RESOURCE));
+            gilbertProps.load(propRes);
+        } catch (IOException e) {
+            logger.error("Could not load gilbert.properties.", e);
+        }
+        String tmpProp = gilbertProps.getProperty("gilbert.cacheTimeout");
+        siteCacheTimeout = 5 * 60 * 60;
+        if (tmpProp == null) {
+            logger.info("Cache timeout remains at default value.");
+        } else {
+            try {
+                siteCacheTimeout = Integer.parseInt(tmpProp);
+            } catch (NumberFormatException e) {
+                logger.warn("Cache timeout has wrong format, using default.", e);
+            }
+        }
+        if (logger.isDebugEnabled()) { logger.debug("Cache timeout set to: " + siteCacheTimeout); }
+        tmpProp = gilbertProps.getProperty("gilbert.cacheCleanupInterval");
+        cleanupInterval = 15;
+        if (tmpProp == null) {
+            logger.info("Cache cleanup interval remains at default value.");
+        } else {
+            try {
+                cleanupInterval = Integer.parseInt(tmpProp);
+            } catch (NumberFormatException e) {
+                logger.warn("Cache cleanup interval has wrong format, using default.", e);
+            }
+        }
+        if (logger.isDebugEnabled()) { logger.debug("Cache cleanup set to: " + cleanupInterval); }
+        tmpProp = gilbertProps.getProperty("gilbert.proxyHost");
+        if ((tmpProp == null) || tmpProp.equals("") || tmpProp.equals("disabled")) {
+            logger.info("Use of HTTP proxy disabled.");
+        } else {
+            sysProps.setProperty("http.proxyHost", tmpProp);
+            if (logger.isDebugEnabled()) { logger.debug("Proxy set to: " + tmpProp); }
+            tmpProp = gilbertProps.getProperty("gilbert.proxyPort");
+            if (tmpProp == null) {
+                logger.info("Proxy port will be set to default (8080)");
+                tmpProp = "8080";
+            }
+            if (logger.isDebugEnabled()) { logger.debug("Proxy port: " + tmpProp); }
+            sysProps.setProperty("http.proxyPort", tmpProp);
+        }
+        tmpProp = gilbertProps.getProperty("gilbert.httpTimeout");
+        if (tmpProp == null || tmpProp.equals("")) {
+            logger.info("Won't touch HTTP timeouts.");
+        } else {
+            sysProps.setProperty("sun.net.client.defaultConnectTimeout", tmpProp);
+            sysProps.setProperty("sun.net.client.defaultReadTimeout", tmpProp);
+            if (logger.isDebugEnabled()) { logger.debug("HTTP timeouts: " + tmpProp); }
+        }
+        logger.debug("Util static initialization complete.");
+    }
+    
+    /**
+     * Dummy method to have the static initializer be called.
+     */
+    public static void init() {
+        logger.debug("Util.init() called.");
+    }
+    
+    /**
+     * Returns a global property. (Properties are read from gilbert.properties)
+     *
+     * @param name Name of the property.
+     */
+    public String getProperty(String name) {
+        return gilbertProps.getProperty(name);
+    }
     
     /**
      * Returns whether the given string has an IP Adress format or a
@@ -78,6 +149,7 @@ public class Util {
             return HOST_NAME;
         }
     }
+    
     /**
      * Check if the given URL is alive.
      * @deprecated Has been replaced with { @link #siteStatus(String) }

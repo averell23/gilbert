@@ -44,11 +44,12 @@
     <a href="<%=state.getBaseURI()%>?reload=admin" target="_parent">Admin Information</a><br/>
     <h2>Other sites</h2>
     <%
-        Vector curSites = extractor.getUrls();
+        Collection curSites = extractor.getUrls();
+        Iterator siteIterator = curSites.iterator();
         int count = 25;
         if (curSites.size() < 25) count = curSites.size();
         for (int i=0 ; i < count ; i++) {
-            String curSite = ((Properties) curSites.get(i)).getProperty("url.name");
+            String curSite = ((Properties) siteIterator.next()).getProperty("url.name");
             String siteName = "***Unresolved?***";
             try {
                 URL tmpU = new URL(curSite);
