@@ -21,7 +21,7 @@
         int count = 25;
         if (curSites.size() < 25) count = curSites.size();
         for (int i=0 ; i < count ; i++) {
-            String curSite = curSites.get(i).toString();
+            String curSite = ((Properties) curSites.get(i)).getProperty("url.name");
             out.print("<a href=\"" + curSite + "\" target=\"right\">");
             out.print(curSite);
             out.println("</a><br>");

@@ -27,12 +27,12 @@ public class RefinerTest {
             System.exit(1);
         }
         // Util.setLogLevel(Util.LOG_DEBUG);
-        VectorRefiner x = new VectorRefiner();
+        Refiner x = new SearchingRefiner(true, "ubicomp");
         x.refine(args[0]);
-        Enumeration e = x.getUrlList().elements();
+        /* Enumeration e = x.getUrlList().elements();
         while (e.hasMoreElements()) {
             System.out.println(e.nextElement());
-        }
+        } */
     }
 
 }

@@ -15,7 +15,7 @@
         extractor.update();
         Vector extractedURLs = extractor.getUrls();
         int selection = (int) (Math.random() * (extractedURLs.size() - 1));
-        String selUrl = extractedURLs.get(selection).toString();
+        String selUrl = ((Properties) extractedURLs.get(selection)).getProperty("url.name");
     %>
 
 <html>

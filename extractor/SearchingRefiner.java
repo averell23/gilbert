@@ -95,9 +95,7 @@ public class SearchingRefiner extends Refiner {
             Util.logMessage("Source URL malformed: " + urlStr, Util.LOG_ERROR);
         }
         if (keepOriginal) {
-            startTag("url");
-            printTag("name", urlStr);
-            endTag("url");
+            printURL(url);
         }
         Util.logMessage("Refiner: Url handler finished.", Util.LOG_DEBUG);
     }

@@ -35,11 +35,11 @@ import java.util.*;
  * @version CVS $Revision$
  */
 public abstract class Refiner extends AbstractTransmutor {
-    /// Vector containing the prefilters 
+    /// Vector containing the prefilters
     protected Vector prefilters;
     /// Indicates if prefiltering is on
     protected boolean prefiltering = false;
-    /// Vector containing the postfilters 
+    /// Vector containing the postfilters
     protected Vector postfilters;
     /// Indicates if postfiltering is off
     protected boolean postfiltering = false;
@@ -58,7 +58,7 @@ public abstract class Refiner extends AbstractTransmutor {
         }
     }
     
-    /** 
+    /**
      * Adds a prefilter to the Extractor. Prefilters will automatically
      * be applied to each visit by the <code>recieveVisit</code> method.
      */
@@ -69,7 +69,7 @@ public abstract class Refiner extends AbstractTransmutor {
         }
     }
     
-    /** 
+    /**
      * Adds a postfilter to the Extractor. Postfilters should be honoured
      * by the child classes, but this may not always be the case.
      */
@@ -85,7 +85,7 @@ public abstract class Refiner extends AbstractTransmutor {
      * parsing of the input stream, but write anything to the output
      * on it's own behalf.
      *
-     * @param input The <code>org.xml.sax.InputSource</code> object 
+     * @param input The <code>org.xml.sax.InputSource</code> object
      *              from which to read the Input.
      */
     protected void refineBlank(InputSource input) {
@@ -141,15 +141,37 @@ public abstract class Refiner extends AbstractTransmutor {
                 accepted = accepted && ((URLFilter) filters.nextElement()).accept(url);
             }
             if (!accepted) return;
-        } 
+        }
         handleURL(url);
     }
     
     /**
-     * This method must be overridden by child classes to handle each of
-     * the URLs. 
-     * 
-     * It's up to the child class to use the proper methods or the 
+     * Prints the given URL back to the output stream. This may be less
+     * efficient than directly printing the information, however it has
+     * the advantage that all URL information is retained.<br>
+     * <b>Note:</b> For quicker writing it is assumed that the URL
+     * object has no "nested elements".
+     */
+    protected void printURL(VisitorURL vUrl) {
+            Enumeration keys = vUrl.propertyNames();
+            startTag("url");
+            while (keys.hasMoreElements()) {
+                String curKey = (String) keys.nextElement();
+                String[] splitKey = curKey.split("\\.");
+                // NOTE AGAIN: We will look only at the second element
+                // NO NESTED ELEMENTS WILL BE PRINTED!
+                if (splitKey.length == 2) {
+                    printTag(splitKey[1], vUrl.getProperty(curKey));
+                }
+            }
+            endTag("url");
+    }
+    
+    /**
+     * Must be overridden by child classes to handle each of
+     * the URLs.
+     *
+     * It's up to the child class to use the proper methods or the
      * <code>outStream</code> for printing the resutls and to honour
      * the postfilters.
      */

@@ -12,7 +12,7 @@ import java.net.*;
 /**
  * Refines into an internal <code>Vector</code>, rather than to the output
  * stream. This will take all URLs from the input source, und create a
- * Vector of <code>URL</code> objects of this.
+ * Vector of <code>VisitorURL</code> objects of this.
  * <p>
  * <b>Please Note:</b> This version will <i>not</i> write anything to the
  * output stream and should be only used as the last Refiner in a chain. 
@@ -40,14 +40,7 @@ public class VectorRefiner extends Refiner {
      * the postfilters.
      */
     public void handleURL(VisitorURL url) {
-        String urlStr = url.getProperty("url.name");
-        URL tUrl = null;
-        try {
-            tUrl = new URL(urlStr);
-            urlList.add(tUrl);
-        } catch (MalformedURLException e) {
-            Util.logMessage("VectorRefiner: Malformed URL found: " + urlStr, Util.LOG_ERROR);
-        }
+        urlList.add(url);
     }
     
     /**
@@ -60,7 +53,7 @@ public class VectorRefiner extends Refiner {
     }
     
     /**
-     * Returns the internal data as a Vector of <code>URL</code>
+     * Returns the internal data as a Vector of <code>VisitorURL</code>
      * objects.
      */
     public Vector getUrlList() {
