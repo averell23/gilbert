@@ -76,7 +76,7 @@ public class SiteInfo {
         this.alive = alive;
     }
     
-    protected boolean getAlive() {
+    public boolean getAlive() {
         if (!primaryLoaded) loadPrimaryInfo();
         return alive;
     }
@@ -90,7 +90,7 @@ public class SiteInfo {
         metaKeywords.add(keyword);
     }
     
-    protected String getMetaDescription() {
+    public String getMetaDescription() {
         if (!secondaryLoaded) loadSecondaryInfo();
         return metaDescription;
     }
