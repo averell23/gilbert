@@ -68,8 +68,8 @@
     <%
         Hashtable liveKeys = Util.geSiteCache(); 
         Enumeration liveKeysL = liveKeys.keys();
-%>
-<%--        while (liveKeysL.hasMoreElements()) {
+        while (liveKeysL.hasMoreElements()) { %>
+<%--
             SiteInfo currentSite = (SiteInfo) liveKeysL.nextElement();
     %>
         <li><%=currentSite.getUrl()%>
@@ -78,10 +78,9 @@
                 <li>Content Type: <%=currentSite.getContentType()%></li>
                 <li>Timestamp: <%=currentSite.getTimestamp()%> (<%=Util.dateToString(currentSite.getTimestamp())%>)</li>
             </ul>
-        </li>
+        </li> --%>
     <%}%>
     </ul>    
-    --%>
 </p>
 </body>
 </html>
