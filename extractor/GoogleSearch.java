@@ -71,6 +71,8 @@ public class GoogleSearch extends WebSearch {
         String domainStr = parameters.getProperty("search.domains");
         String noOfResults = parameters.getProperty("search.resultcount");
         String languageStr = parameters.getProperty("search.languages");
+        if (logger.isDebugEnabled()) logger.debug("OrCombined value: " + parameters.getProperty("search.orCombined"));
+        Boolean searchOr = new Boolean(parameters.getProperty("search.orCombined"));
         Vector domains = new Vector();
         domains.add("");
         Vector languages = new Vector();
@@ -87,7 +89,7 @@ public class GoogleSearch extends WebSearch {
             String curDom = (String) domEnum.nextElement();
             while (langEnum.hasMoreElements()) {
                 String curLang = (String) langEnum.nextElement();
-                searchGoogle(keywords, curLang, curDom, noOfResults);
+                searchGoogle(keywords, curLang, curDom, noOfResults, searchOr.booleanValue());
             }
         }
         return results;
@@ -96,7 +98,7 @@ public class GoogleSearch extends WebSearch {
     /**
      * Creates the search URL and calls the search.
      */
-    protected void searchGoogle(String keywords, String language, String domain, String numberOfResults) {
+    protected void searchGoogle(String keywords, String language, String domain, String numberOfResults, boolean searchOr) {
         parseResults = false;
         paragraphParsed = false;
         doneParsing = false;
@@ -105,7 +107,13 @@ public class GoogleSearch extends WebSearch {
         URL sUrl = null;
         
         StringBuffer searchBuf = new StringBuffer(GOOGLE_HOME);
-        searchBuf.append("search?as_q=" + keywords);
+        searchBuf.append("search?");
+        if (searchOr) {
+            searchBuf.append("as_oq=");
+        } else {
+            searchBuf.append("as_q=");
+        }
+        searchBuf.append(keywords);
         if ((numberOfResults == null) || numberOfResults.equals("")) {
             numberOfResults = "10";
         }
