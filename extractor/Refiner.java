@@ -36,7 +36,7 @@ import org.apache.log4j.*;
  * @author  Daniel Hahn
  * @version CVS $Revision$
  */
-public abstract class Refiner extends AbstractTransmutor {
+public abstract class Refiner extends AbstractTransmutor implements Runnable {
     /// Vector containing the prefilters
     protected Vector prefilters;
     /// Indicates if prefiltering is on
@@ -49,6 +49,16 @@ public abstract class Refiner extends AbstractTransmutor {
     protected UrlXMLHandler tHandler;
     /// logger for this class.
     protected static Logger logger = Logger.getLogger(Refiner.class);
+    /// Input
+    protected InputSource input;
+    /// Maximum number of handler threads.
+    protected int maxHandlers = 1;
+    /// Current number of handler threads
+    protected int currentHandlers = 0;
+    /// Dummy object to synchronize Handler threads.
+    protected Object sync;
+    /// Object for Refiner Chain waiting object hack
+    protected WaitObject wob;
     
     /*
      * If the refiner passes original the input URLs on to the output, this
@@ -66,6 +76,8 @@ public abstract class Refiner extends AbstractTransmutor {
     public Refiner() {
         visitCache = new Hashtable();
         prefilters = new Vector();
+        sync = new Object();
+        wob = new WaitObject();
         try {
             logger.debug("Creating parser.");
             parser = XMLReaderFactory.createXMLReader("org.apache.xerces.parsers.SAXParser");
@@ -75,6 +87,7 @@ public abstract class Refiner extends AbstractTransmutor {
             logger.debug("Parser created and set.");
         } catch (SAXException e) {
             logger.error("SAX parsing error, aborting refine: " + e.getMessage(), e);
+            outStream.close();
             // System.exit(1);
         }
     }
@@ -84,10 +97,15 @@ public abstract class Refiner extends AbstractTransmutor {
      * @param degree The maximum degree of relationship. A value of 0 will
      *               disable this feature, negative values will be ignored.
      */
-    public void setMaxDegree(int degree) {
+    public synchronized void setMaxDegree(int degree) {
         if (degree >= 0) {
             maxDegree = degree;
         }
+    }
+    
+    /// Get the wait object.
+    public WaitObject getWaitObject() {
+        return wob;
     }
     
     /**
@@ -97,11 +115,20 @@ public abstract class Refiner extends AbstractTransmutor {
         return maxDegree;
     }
     
+    public synchronized int getMaxHandlers() {
+        return maxHandlers;
+    }
+    
+    public synchronized void setMaxHandlers(int handlers) {
+        if (handlers < 1) handlers = 1;
+        maxHandlers = handlers;
+    }
+    
     /**
      * Adds a prefilter to the Extractor. Prefilters will automatically
      * be applied to each visit by the <code>recieveVisit</code> method.
      */
-    public void addPrefilter(URLFilter filter) {
+    public synchronized void addPrefilter(URLFilter filter) {
         if (filter != null) {
             prefiltering = true;
             prefilters.add(filter);
@@ -109,6 +136,12 @@ public abstract class Refiner extends AbstractTransmutor {
         }
     }
     
+    /**
+     * Gets the prefilters.
+     */
+    public Vector getPrefilters() {
+        return prefilters;
+    }
     
     /**
      * This starts the refining process. This method will only start the
@@ -118,29 +151,44 @@ public abstract class Refiner extends AbstractTransmutor {
      * @param input The <code>org.xml.sax.InputSource</code> object
      *              from which to read the Input.
      */
-    protected void refineBlank(InputSource input) {
-        visitCache = new Hashtable();
-        tHandler.reset();
-        if (logger.isInfoEnabled()) {
-            logger.info("Refining.");
-            logger.info("I am a " + this.getClass().getName());
-            logger.debug("Input is: " + input);
-        }
-        try {
-            parser.parse(input);
-        } catch (SAXException e) {
-            logger.error("SAX Parser error, aborting: " + e.getMessage(), e);
-            // System.exit(1);
-        } catch (java.io.IOException e) {
-            logger.error("Could not open location: " + input, e);
-            // System.exit(1);
+    protected synchronized void refineBlank(InputSource input) {
+        synchronized (wob) {
+            visitCache = new Hashtable();
+            tHandler.reset();
+            if (logger.isInfoEnabled()) {
+                logger.info("Refining.");
+                logger.info("I am a " + this.getClass().getName());
+                logger.debug("Input is: " + input);
+            }
+            try {
+                parser.parse(input);
+            } catch (SAXException e) {
+                logger.error("SAX Parser error, aborting: " + e.getMessage(), e);
+                // System.exit(1);
+            } catch (java.io.IOException e) {
+                logger.error("Could not open location: " + input, e);
+                // System.exit(1);
+            }
+            logger.debug("Waiting for handlers to finish.");
+            synchronized (sync) {
+                while (currentHandlers > 0) {
+                    try {
+                        sync.wait();
+                    } catch (InterruptedException e) {
+                        logger.info("Wait Interrupt");
+                    }
+                }
+            }
+            wob.finish();
+            wob.notifyAll();
+            logger.debug("Finalizing Refiner Thread.");
         }
     }
     
     /**
      * Refines XML data from a given URI.
      */
-    protected void refineBlank(String uri) {
+    protected synchronized void refineBlank(String uri) {
         refineBlank(new InputSource(uri));
     }
     
@@ -151,7 +199,7 @@ public abstract class Refiner extends AbstractTransmutor {
      * called once for each URL, subsequent occurences of the same URL will
      * be ignored.
      */
-    public void refine(InputSource input) {
+    public synchronized void refine(InputSource input) {
         outStream.println("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
         startTag("url_list");
         refineBlank(input);
@@ -161,7 +209,7 @@ public abstract class Refiner extends AbstractTransmutor {
     /**
      * Refine from a given URI.
      */
-    public void refine(String uri) {
+    public synchronized void refine(String uri) {
         refine(new InputSource(uri));
     }
     
@@ -176,35 +224,47 @@ public abstract class Refiner extends AbstractTransmutor {
             logger.debug("URL name: " + url.getProperty("url.name"));
         }
         int degree = 0;
-        try {
-            degree = Integer.valueOf(url.getProperty("url.degree")).intValue();
-        } catch (NumberFormatException e) {
-            logger.error("Could not determine degree: " + e.getMessage());
-        }
-        if ((maxDegree == 0) || (degree <= maxDegree)) {
-            if (prefiltering) {
-                boolean accepted = true;
-                Enumeration filters = prefilters.elements();
-                while (filters.hasMoreElements()) {
-                    URLFilter nextFilter = (URLFilter) filters.nextElement();
-                    accepted = accepted && nextFilter.accept(url);
-                }
-                if (!accepted) return;
-            }
-        } else if (logger.isInfoEnabled()) {
-            logger.info("Refiner: URL with degree " + degree + " dropped, max. degree was " + maxDegree);
-        }
         String uName = url.getProperty("url.name");
         if (!visitCache.containsKey(uName)) {
-            handleURL(url);
             visitCache.put(uName, url);
+            try {
+                degree = Integer.valueOf(url.getProperty("url.degree")).intValue();
+            } catch (NumberFormatException e) {
+                logger.error("Could not determine degree: " + e.getMessage());
+            }
+            
+            boolean accepted = true;
+            if ((maxDegree == 0) || (degree <= maxDegree)) {
+                if (prefiltering) {
+                    Enumeration filters = prefilters.elements();
+                    while (accepted && filters.hasMoreElements()) {
+                        URLFilter nextFilter = (URLFilter) filters.nextElement();
+                        accepted = accepted && nextFilter.accept(url);
+                    }
+                }
+            } else {
+                accepted = false;
+                logger.info("Refiner: URL with degree " + degree + " dropped, max. degree was " + maxDegree);
+            }
+            if (accepted) {
+                logger.debug("About to start next handler thread.");
+                synchronized (sync) {
+                    while (currentHandlers >= maxHandlers) {
+                        try {
+                            sync.wait();
+                        } catch (InterruptedException e) {
+                            logger.info("Wait Interrupt");
+                        }
+                    }
+                    currentHandlers++;
+                }
+                if (logger.isDebugEnabled()) logger.debug("About to start handler thread. " + currentHandlers);
+                RefinerRunner r = new RefinerRunner(url);
+                r.start();
+                logger.debug("Handler thread started.");
+            }
         } else if (logger.isDebugEnabled()) {
             logger.debug("Refiner: Ignored duplicate url " + uName);
-        }
-        if (passing) {
-            printURL(url);
-        } else {
-            logger.debug("Refiner: URL not passed, passing disabled.");
         }
     }
     
@@ -241,8 +301,7 @@ public abstract class Refiner extends AbstractTransmutor {
      * the URLs.
      *
      * It's up to the child class to use the proper methods or the
-     * <code>outStream</code> for printing the resutls and to honour
-     * the postfilters.
+     * <code>outStream</code> for printing the resutls.
      */
     public abstract void handleURL(VisitorURL url);
     
@@ -255,5 +314,76 @@ public abstract class Refiner extends AbstractTransmutor {
         return passing;
     }
     
+    /** Runs the refiner thread */
+    public void run() {
+        if (input != null) {
+            refine(input);
+        } else {
+            logger.error("Tried to run refiner without input.");
+        }
+        logger.debug("Finalizing Refiner thread.");
+        outStream.flush();
+        outStream.close();
+    }
+    
+    
+    /**
+     * Set the input source for threaded execution.
+     */
+    public void setInputSource(InputSource input) {
+        this.input = input;
+    }
+    
+    /** Starts reifining in a separate thread */
+    public void start() {
+        logger.debug("About to start refiner thread.");
+        Thread t = new Thread(this);
+        t.start();
+        logger.info("Started refiner thread.");
+    }
+    
+    protected class RefinerRunner extends Thread {
+        /// Visit handled by the thread
+        VisitorURL url;
+        public RefinerRunner(VisitorURL url) {
+            this.url = url;
+        }
+        
+        /// Runs a new handler.
+        public void run() {
+            logger.debug("About to call handleURL()");
+            handleURL(url);
+            logger.debug("Handle URL finished.");
+            if (passing) {
+                logger.debug("Passing URL now.");
+                synchronized (outStream) {
+                    printURL(url);
+                }
+            } else {
+                logger.debug("Refiner: URL not passed, passing disabled.");
+            }
+            synchronized (sync) {
+                currentHandlers--;
+                sync.notifyAll();
+            }
+            if (logger.isDebugEnabled()) logger.debug("Thread finalizing: " + currentHandlers);
+            synchronized (outStream) {
+                outStream.flush();
+            }
+        }
+    }
+    
+    // For the waiting object hack
+    protected class WaitObject {
+        boolean finished = false;
+        
+        public void finish() {
+            finished = true;
+        }
+        
+        public boolean isFinished() {
+            return finished;
+        }
+    }
     
 }

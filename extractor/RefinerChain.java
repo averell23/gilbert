@@ -9,9 +9,11 @@ import java.util.*;
 import java.io.*;
 import org.xml.sax.*;
 import org.apache.log4j.*;
+import gilbert.io.*;
 
 /**
  * Chain of refiners. The data will be passed through all of the refiners.
+ * Each Refiner will be started as a separate thread.
  *
  * @author  Daniel Hahn
  * @version CVS $Revision$
@@ -25,12 +27,12 @@ public class RefinerChain {
     protected InputSource input;
     /// Logger for this class
     protected Logger logger;
-
+    
     /** Creates new RefinerChain */
     public RefinerChain() {
         refinerChain = new Vector();
         outputStream = System.out;
-         logger = Logger.getLogger(this.getClass());
+        logger = Logger.getLogger(this.getClass());
     }
     
     /**
@@ -47,10 +49,10 @@ public class RefinerChain {
     public RefinerChain(String uri) {
         this(new InputSource(uri));
     }
-
+    
     /**
-     * Starts the refinement process. This will invoke all Refiners in 
-     * turn, the last Refiner in the chain will write to the chain's 
+     * Starts the refinement process. This will invoke all Refiners in
+     * turn, the last Refiner in the chain will write to the chain's
      * output stream.
      */
     public void refine() throws IOException {
@@ -58,7 +60,8 @@ public class RefinerChain {
     }
     
     /**
-     * Does the actual refining.
+     * Does the actual refining. This method will block until the last
+     * Refiner has returned.
      */
     public void refine(InputSource inSrc) throws IOException {
         // Check if we're clear to go
@@ -71,38 +74,41 @@ public class RefinerChain {
             return;
         }
         
-        /* These will buffer the results of each step. It may not 
-         * be effective for large numbers of Refiners, but it should
-         * be working safely. We need two Streams, since each
-         * Refiner will read from one ByteArray and write 
-         * to another one.
-         */
-        ByteArrayOutputStream standIn = new ByteArrayOutputStream();
-        ByteArrayOutputStream standOut = new ByteArrayOutputStream();
         
         InputSource tmpInput = inSrc;
         Enumeration refinerE = refinerChain.elements();
+        // Set up all refiners
         while (refinerE.hasMoreElements()) {
-            // standIn has the array the refiner will read from
-            // standOut has the array the refiner will write to
-            // in the first round we read from input instead
-            standOut.reset();            // resets the output buffer
             Refiner current = (Refiner) refinerE.nextElement();
-            logger.info("Starting Refiner from chain: " + current.getClass().getName());
-            current.setOutputStream(standOut); // write to the output buffer
-            current.refine(tmpInput); // read from the current input
-            standOut.flush();
-            ByteArrayInputStream tmpIS = new ByteArrayInputStream(standOut.toByteArray());
-            tmpInput = new InputSource(tmpIS); // this will be the input for next round
-            // Swap the buffers
-            ByteArrayOutputStream tmp = standOut;
-            standOut = standIn;
-            standIn = tmp;
-            // The output of the last round is now in standIn
+            logger.info("Preparing Refiner from chain: " + current.getClass().getName());
+            current.setInputSource(tmpInput);
+            if (refinerE.hasMoreElements()) {
+                BufConnectOutputStream outPipe = new BufConnectOutputStream();
+                current.setOutputStream(outPipe);
+                InputStream inPipe = new BufConnectInputStream(outPipe);
+                tmpInput = new InputSource(inPipe);
+            } else { // This is the last refiner
+                current.setOutputStream(outputStream);
+            }
         }
-        // Dump the results to the output Stream
-        // FIXME: The last Refiner could write to the output directly for efficiency
-        standIn.writeTo(outputStream);
+        // Starting the Refiners
+        refinerE = refinerChain.elements();
+        Refiner.WaitObject wob = null;
+        while (refinerE.hasMoreElements()) {
+            Refiner current = (Refiner) refinerE.nextElement();
+            logger.info("Executing Refiner from chain: " + current.getClass().getName());
+            wob = current.getWaitObject();
+            current.start();
+        }
+        logger.debug("Wating for Refiners to finish.");
+        synchronized (wob) {
+            while (!wob.isFinished()) { // Quick hack to wait for last refiner to finish.
+                try {
+                    wob.wait();
+                } catch (InterruptedException e) { }
+            }
+        }
+        logger.info("RefinerChain exiting.");
     }
     
     /**
@@ -110,7 +116,7 @@ public class RefinerChain {
      */
     public void setOutputStream(PrintStream out) {
         outputStream = out;
-    } 
+    }
     
     /**
      * Sets the output stream for the chain.
