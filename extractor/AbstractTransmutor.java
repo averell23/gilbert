@@ -93,6 +93,11 @@ public abstract class AbstractTransmutor {
         // (e.g. japanese encoding)
         if (c > 255) return;
         if ((c >= 128) && (c <= 159)) return;
+        // Try to escape others 
+        if (c > 159) {
+            int cVal = c;
+            outStream.print("&#" + cVal + ";");
+        }
         
         switch (c) {
             case '<': {

@@ -153,7 +153,7 @@ public class UDPUpdater {
         extractor.addRefiner(endRef);
         // create a dummy output for the last refiner
         OutputStream dummy = new OutputStream() { public void write(int b) {} };
-        endRef.setOutputStream(new PrintStream(dummy));
+        endRef.setOutputStream(dummy);
     }
     
     static void parseCommandLine(String[] args) {

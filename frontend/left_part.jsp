@@ -30,7 +30,7 @@
         src="pics/pause.gif" alt="pause"
     <%} else {%>
         src="pics/start.gif" alt="start"
-    <%}%></a>
+    <%}%>/></a>
     <h2>Internal</h2>
     <a href="<%=state.getBaseURI()%>?reload=help" target="_parent">Help page</a><br/>
     <a href="<%=state.getBaseURI()%>?reload=admin" target="_parent">Admin Information</a><br/>
