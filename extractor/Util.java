@@ -174,6 +174,13 @@ public class Util {
             liveCache.put(host, new Long(- System.currentTimeMillis()));
         }
     }
+    
+    /**
+     * Convenience method to get at peek at the cache.
+     */
+    public static Hashtable getLiveCache() {
+        return liveCache;
+    }
         
     
     /**

@@ -1,3 +1,9 @@
 body { background-color:beige; color:olivedrab ; font-family:Arial,Helvetica ; font-size:10pt}
-p { margin-left:1cm }
 form { margin-left:2cm }
+img { border-width:0cm }
+p { margin-left:1cm }
+a:link { color:orange; text-decoration:none }
+a:visited { color:saddlebrown; text-decoration:none}
+a:hover { color:orange; text-decoration:underline }
+a:active { color:orange; text-decoration:underline }
+a:focus { color:orange; text-decoration:underline }

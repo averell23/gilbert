@@ -62,5 +62,18 @@
         <%} // close while loop %>
     </ul>
     </p>
+    <p>
+    Contentes of the Hoste liveCache:
+    <ul>
+    <%
+        Hashtable liveKeys = Util.getLiveCache();
+        Enumeration liveKeysL = liveKeys.keys();
+        while (liveKeysL.hasMoreElements()) {
+            String currentSite = (String) liveKeysL.nextElement();
+    %>
+        <li><%=currentSite%> - <%=liveKeys.get(currentSite)%></li>
+    <%}%>
+    </ul>
+    </p>
 </body>
 </html>
