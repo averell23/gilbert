@@ -8,6 +8,7 @@ package gilbert.extractor;
 import org.xml.sax.*;
 import java.util.*;
 import java.io.*;
+import gilbert.io.*;
 import org.apache.log4j.*;
 
 /**
@@ -19,7 +20,7 @@ import org.apache.log4j.*;
  * @author  Daniel Hahn
  * @version CVS $Revision$
  */
-public class ExtractingChain extends RefinerChain {
+public class ExtractingChain extends RefinerChain implements Runnable {
     /// The Extractor that starts the chain
     protected Extractor extractor;
     /// The logger for this class
@@ -68,11 +69,23 @@ public class ExtractingChain extends RefinerChain {
             logger.error("Cannot start extraction chain: No input source");
             return;
         }
-        ByteArrayOutputStream standIn = new ByteArrayOutputStream(); // Temp stream for reult
-        extractor.setOutputStream(standIn);
-        extractor.extract(input);
-        standIn.flush();
-        refine(new InputSource(new ByteArrayInputStream(standIn.toByteArray())));
+        BufConnectOutputStream pipeOut = new BufConnectOutputStream();
+        extractor.setOutputStream(pipeOut);
+        extractor.setInputSource(input);
+        InputStream inPipe = new BufConnectInputStream(pipeOut);
+        logger.debug("About to start extractor thread.");
+        extractor.start();
+        logger.debug("Extractor thread started.");
+        refine(new InputSource(inPipe));
+    }
+    
+    
+    /**
+     * Starts an extraction in a separate thread.
+     */
+    public void start() {
+        Thread t = new Thread(this);
+        t.start();
     }
     
     /**
@@ -81,4 +94,13 @@ public class ExtractingChain extends RefinerChain {
     public void setExtractor(Extractor extractor) {
         this.extractor = extractor;
     }
+    
+    public void run() {
+        try {
+            extract();
+        } catch (IOException e) {
+            logger.error("IO Exception in extractor thread.", e);
+        }
+    }
+    
 }
