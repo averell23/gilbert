@@ -42,6 +42,8 @@ public class ExtractorBean {
     protected VectorRefiner endRef;
     /// Counter for failed connections to the data source
     protected int failures = 0;
+    /// The max. number of failed extractions that the backoff takes into account.
+    protected int maxBackoff = 6;
     
     /** Creates new ExtractorBean */
     public ExtractorBean() {
@@ -129,7 +131,7 @@ public class ExtractorBean {
                 failures = 0;
             } else {
                 Util.logMessage("ExtractorBean: Extraction failed (no results)", Util.LOG_MESSAGE);
-                if (failures < 5) failures++; // increase the failure counter..
+                if (failures < maxBackoff) failures++; // increase the failure counter..
                 timestamp = System.currentTimeMillis();
             }
         }
