@@ -7,6 +7,7 @@
 package gilbert.extractor.refiners;
 
 import gilbert.extractor.*;
+import java.util.*;
 
 /**
  * Finds all URLs linked from the current URL. 
@@ -28,15 +29,26 @@ public class LinkRefiner extends Refiner {
      * the postfilters.
      */
     public void handleURL(VisitorURL url) {
-        String url = url.getProperty("url.name");
+        String urlStr = url.getProperty("url.name");
         Util.logMessage("LinkRefiner: Handling URL " + url, Util.LOG_DEBUG);
-        SiteInfo info = Util.siteStatus(url);
+        SiteInfo info = Util.siteStatus(urlStr);
         Vector links = info.getLinks();
         if (links.size() > 0) {
+            int degree = 0;
+            try {
+                String degreeStr = (String) url.getProperty("url.degree");
+                degree = Integer.parseInt(degreeStr);
+            } catch (NumberFormatException e) {
+                Util.logMessage("LinkRefiner: Unable to determine degree for URL " + url, Util.LOG_WARN);
+            }
             Enumeration linksE = links.elements();
             while (linksE.hasMoreElements()) {
-                String linked = (String) linksE.nextElement();
-                Ut
+                String link = (String) linksE.nextElement();
+                Util.logMessage("LinkRefiner: Added linked URL " + link, Util.LOG_MESSAGE);
+                startTag("url");
+                printTag("url.timestamp", (String) url.getProperty("url.timestamp"));
+                printTag("url.degree", "" + (degree + 1));
+                endTag("url");
             }
         }
     }
