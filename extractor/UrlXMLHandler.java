@@ -26,7 +26,7 @@ public class UrlXMLHandler extends AbstractXMLHandler {
     }
     
     public void startElement(java.lang.String namespaceURI, java.lang.String localName, java.lang.String qName, org.xml.sax.Attributes attributes) throws org.xml.sax.SAXException {
-        // System.out.println("Starting Element: " + localName);
+        Util.logMessage("UrlXMLHandler.startElement(): " + localName, Util.LOG_DEBUG);
         if (localName.equals("url")) {
             if (currentUrl!= null) {
                 throw(new org.xml.sax.SAXException("Wrong format: url not closed before starting new"));
@@ -38,11 +38,11 @@ public class UrlXMLHandler extends AbstractXMLHandler {
     }
 
     public void endElement(java.lang.String namespaceURI, java.lang.String localName, java.lang.String qName) throws org.xml.sax.SAXException {
+        Util.logMessage("UrlXMLHandler.endElement(): " + localName, Util.LOG_DEBUG);
         if (localName.equals("url_list")) return;
         Object top = tagStack.pop();
         StringBuffer data = new StringBuffer();
         StringBuffer key = new StringBuffer();
-        Util.logMessage("Ending element: " + localName, Util.LOG_DEBUG);
         
         if (!localName.equals("url")) {
             while (top instanceof StringBuffer) {

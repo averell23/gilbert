@@ -7,6 +7,7 @@
 package gilbert.extractor;
 import java.util.*;
 import java.net.*;
+import org.xml.sax.*;
 
 /**
  * This takes a existing list of URLs and searches their domains
@@ -37,12 +38,17 @@ public class SearchingRefiner extends Refiner {
         // initialize the search Object
         mySearch = new GoogleSearch();
         sProps = new Properties();
+        this.keepOriginal = keepOriginal;
         sProps.setProperty("search.keywords", keywordList);
     }
     
-    public void refine(String uri) {
+    public void refine(InputSource input) {
         refHash = new Hashtable();
-        super.refine(uri);
+        super.refine(input);
+    }
+    
+    public void refine(String uri) {
+        refine(new InputSource(uri));
     }
     
     /** This method must be overridden by child classes to handle each of
@@ -70,6 +76,7 @@ public class SearchingRefiner extends Refiner {
             sProps.setProperty("search.domains", domainName);
             mySearch.setParameters(sProps);
             Vector results = mySearch.search();
+            Util.logMessage("Refiner: Domain search complete.", Util.LOG_DEBUG);
             if (results != null) {
                 Enumeration resultsE = results.elements();
                 while (resultsE.hasMoreElements()) {
@@ -91,6 +98,7 @@ public class SearchingRefiner extends Refiner {
             printTag("name", urlStr);
             endTag("url");
         }
+        Util.logMessage("Refiner: Url handler finished.", Util.LOG_DEBUG);
     }
     
 }

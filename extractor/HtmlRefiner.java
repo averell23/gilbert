@@ -5,6 +5,7 @@
  */
 
 package gilbert.extractor;
+import org.xml.sax.*;
 
 /**
  * Refiner that turns an URL list into a XHTML page
@@ -22,15 +23,20 @@ public class HtmlRefiner extends Refiner {
      * Overridden by this class since we don't want to print a standard
      * URL list.
      */
-    public void refine(String uri) {
+    public void refine(InputSource input) {
+        Util.logMessage("HtmlRefiner: Starting HTML writing", Util.LOG_DEBUG);
         startTag("html");
         startTag("head");
         printTag("title", "URL list created by HtmlRefiner");
         endTag("head");
         startTag("body");
-        refineBlank(uri);
+        refineBlank(input);
         endTag("body");
         endTag("html");
+    }
+    
+    public void refine(String uri) {
+        refine(new InputSource(uri));
     }
 
     /**

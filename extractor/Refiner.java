@@ -12,6 +12,7 @@ import org.xml.sax.SAXNotRecognizedException;
 import org.xml.sax.SAXNotSupportedException;
 import org.xml.sax.SAXParseException;
 import org.xml.sax.XMLReader;
+import org.xml.sax.InputSource;
 import org.xml.sax.helpers.XMLReaderFactory;
 import org.xml.sax.helpers.DefaultHandler;
 import java.io.*;
@@ -53,7 +54,7 @@ public abstract class Refiner extends AbstractTransmutor {
         } catch (SAXException e) {
             System.err.println("*** Extractor aborting due to error: " + e.getMessage());
             e.printStackTrace();
-            System.exit(1);
+            // System.exit(1);
         }
     }
     
@@ -84,19 +85,29 @@ public abstract class Refiner extends AbstractTransmutor {
      * parsing of the input stream, but write anything to the output
      * on it's own behalf.
      *
-     * @param uri The URI of the XML source to read.
+     * @param input The <code>org.xml.sax.InputSource</code> object 
+     *              from which to read the Input.
      */
-    protected void refineBlank(String uri) {
+    protected void refineBlank(InputSource input) {
+        Util.logMessage("Refiner: Starting generic refine.", Util.LOG_DEBUG);
+        Util.logMessage("I am a " + this.getClass().getName(), Util.LOG_DEBUG);
         try {
-            parser.parse(uri);
+            parser.parse(input);
         } catch (SAXException e) {
             System.err.println("*** Extractor aborting due to error: " + e.getMessage());
             e.printStackTrace();
-            System.exit(1);
+            // System.exit(1);
         } catch (java.io.IOException e) {
-            System.err.println("*** Error opening location: " + uri);
-            System.exit(1);
+            System.err.println("*** Error opening location: " + input);
+            // System.exit(1);
         }
+    }
+    
+    /**
+     * Refines XML data from a given URI.
+     */
+    protected void refineBlank(String uri) {
+        refineBlank(new InputSource(uri));
     }
     
     /**
@@ -104,11 +115,19 @@ public abstract class Refiner extends AbstractTransmutor {
      * and end Tags for the <url_list> on the output stream. This is the
      * standard behaviour, but child class may override it.
      */
-    public void refine(String uri) {
+    public void refine(InputSource input) {
         startTag("url_list");
-        refineBlank(uri);
+        refineBlank(input);
         endTag("url_list");
     }
+    
+    /**
+     * Refine from a given URI.
+     */
+    public void refine(String uri) {
+        refine(new InputSource(uri));
+    }
+    
     
     /**
      * This receives a URL object from the XML Handler. This applies

@@ -12,6 +12,7 @@ import org.xml.sax.SAXNotRecognizedException;
 import org.xml.sax.SAXNotSupportedException;
 import org.xml.sax.SAXParseException;
 import org.xml.sax.XMLReader;
+import org.xml.sax.InputSource;
 import org.xml.sax.helpers.XMLReaderFactory;
 import org.xml.sax.helpers.DefaultHandler;
 import java.io.*;
@@ -49,7 +50,7 @@ public abstract class Extractor extends AbstractTransmutor {
         } catch (SAXException e) {
             System.err.println("*** Extractor aborting due to error: " + e.getMessage());
             e.printStackTrace();
-            System.exit(1);
+            // System.exit(1);
         }
         prefilters = new Vector();
         postfilters = new Vector();
@@ -57,21 +58,31 @@ public abstract class Extractor extends AbstractTransmutor {
     
     /**
      * This actually starts the extraction process.
-     * @param uri The URI of the XML source to read.
+     * @param input The <code>org.xml.sax.InputSource</code> from
+     *              which to read the XML data.
      */
-    public void extract(String uri) {
+    // FIXME: Throws null pointer when file is not of proper format..
+    public void extract(InputSource input) {
         outStream.println("<url_list>");
         try {
-            parser.parse(uri);
+            parser.parse(input);
         } catch (SAXException e) {
             System.err.println("*** Extractor aborting due to error: " + e.getMessage());
             e.printStackTrace();
-            System.exit(1);
+            // System.exit(1);
         } catch (java.io.IOException e) {
-            System.err.println("*** Error opening location: " + uri);
-            System.exit(1);
+            System.err.println("*** Error opening location: " + input);
+            // System.exit(1);
         }
         outStream.println("</url_list>");
+    }
+    
+    /** 
+     * Extrats the XML Data from a given URI.
+     */
+    public void extract(String uri) {
+        InputSource src = new InputSource(uri);
+        extract(src);
     }
 
     /** 

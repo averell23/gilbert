@@ -25,10 +25,11 @@ implements org.xml.sax.ContentHandler, org.xml.sax.ErrorHandler {
 
     public void startDocument() throws org.xml.sax.SAXException {
         tagStack = new Stack();
+        Util.logMessage("*XMLHandler.startDocument()", Util.LOG_DEBUG);
     }
     
     public void characters(char[] ch, int start, int length) throws org.xml.sax.SAXException {
-        Util.logMessage("Got character data: -" + new String(ch, start, length) + "-", Util.LOG_DEBUG);
+        Util.logMessage("*XMLHandler.characters: -" + new String(ch, start, length) + "-", Util.LOG_DEBUG);
         String chS = new String(ch, start, length);
         if (!chS.trim().equals("")) {
             tagStack.push(new StringBuffer(chS));
@@ -45,6 +46,7 @@ implements org.xml.sax.ContentHandler, org.xml.sax.ErrorHandler {
     }
     
     public void endDocument() throws org.xml.sax.SAXException {
+        Util.logMessage("*XMLHandler.endDocument()", Util.LOG_DEBUG);
         // Check for sanity
         if (!tagStack.empty()) {
             System.err.println("*** Warning: Stack not empty at end of document!");

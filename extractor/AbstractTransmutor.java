@@ -33,6 +33,16 @@ public abstract class AbstractTransmutor {
     public AbstractTransmutor() {
     }
     
+    public void setOutputStream(OutputStream outStream) {
+        this.outStream = new PrintStream(outStream);
+    }
+    
+    /** Returns the output stream of this Transmutor */
+    public PrintStream getOutputStream() {
+        return outStream;
+    }
+        
+    
     /**
      * Prints a XML tag with the data as character data. This will
      * print to the <code>outStream</code>

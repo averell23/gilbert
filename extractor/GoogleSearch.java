@@ -102,6 +102,7 @@ public class GoogleSearch extends WebSearch {
             return;
         }
         callSearch(sUrl);
+        Util.logMessage("GoogleSearch: Search call returned.", Util.LOG_DEBUG);
     }
     
     void handleHTMLEndTag(HTML.Tag t,int pos) {
@@ -130,8 +131,9 @@ public class GoogleSearch extends WebSearch {
                 doneParsing = true;
             }
         }
-        if (t.equals(HTML.Tag.A) && (!paragraphParsed)) { // Get a new URL
+        if (t.equals(HTML.Tag.A) && (!paragraphParsed) && parseResults) { // Get a new URL
             String urlName = (String) a.getAttribute(HTML.Attribute.HREF);
+            Util.logMessage("GoogleSearch: Trying to capture: " + urlName, Util.LOG_DEBUG);
             URL myUrl = null;
             try {
                 myUrl = new URL(urlName);
