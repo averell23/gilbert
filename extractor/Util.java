@@ -105,7 +105,7 @@ public class Util {
             logMessage(host + " is not a valid URL.", LOG_WARN);
             return false;
         } catch (IOException e) {
-            Util.logMessage("IOException trying if host was alive: " + e.getMessage(), Util.LOG_MESSAGE);
+            Util.logMessage("IOException checking if host was alive: " + e.getMessage(), Util.LOG_MESSAGE);
             addCacheEntry(host, false); // This only makes sense when using a proxy!
             return false;
         }
@@ -194,7 +194,7 @@ public class Util {
         } else {
             Long tStamp = (Long) liveCache.get(host);
             long tStampReal = tStamp.longValue();
-            if ((Math.abs(tStampReal) + (liveCacheTimeout * 1000)) > System.currentTimeMillis()) {
+            if ((Math.abs(tStampReal) + (liveCacheTimeout * 1000)) < System.currentTimeMillis()) {
                 liveCache.remove(host);
                 return -1;
             } else {

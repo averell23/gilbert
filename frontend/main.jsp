@@ -81,12 +81,9 @@
     }
   </script>
 --%>
-  <frameset ROWS="80%, 20%">
-    <frameset COLS="20%, 80%">
-        <frame SRC="left_part.jsp" NAME="left" />
-        <frame SRC="<%=selUrl%>" NAME="right" />
-    </frameset>
-    <frame SRC="bottom_part.jsp" NAME="bottom" />
+  <frameset COLS="20%, 80%">
+    <frame SRC="left_part.jsp" NAME="left" />
+    <frame SRC="<%=selUrl%>" NAME="right" />
     <noframes>Your browser doesn't support frames. Guess you already knew that?</noframes>
   </frameset>
 </html>
