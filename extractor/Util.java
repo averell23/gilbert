@@ -30,8 +30,8 @@ public class Util {
         Properties sysProps = System.getProperties();
         sysProps.setProperty("http.proxyHost", "wwwcache.lancs.ac.uk");
         sysProps.setProperty("http.proxyPort", "8080");
-        sysProps.setProperty("sun.net.client.defaultConnectTimeout", "1000");
-        sysProps.setProperty("sun.net.client.defaultReadTimeout", "4000");
+        sysProps.setProperty("sun.net.client.defaultConnectTimeout", "20000");
+        sysProps.setProperty("sun.net.client.defaultReadTimeout", "20000");
         logger.debug("Util static initialization complete.");
     }
     
@@ -82,7 +82,7 @@ public class Util {
      * Check if the given URL is alive.
      * @deprecated Has been replaced with { @link #siteStatus(String) }
      */
-    public static boolean isAlive(String host) {
+    public synchronized static boolean isAlive(String host) {
         return siteStatus("http://" + host + "/").getAlive();
     }
     
@@ -90,7 +90,7 @@ public class Util {
      * Check the status of the give web site. This will return a
      * <code>SiteInfo</code> object containig the status.
      */
-    public static SiteInfo siteStatus(String urlStr) {
+    public synchronized static SiteInfo siteStatus(String urlStr) {
         if (logger.isInfoEnabled()) logger.info("Checking site status for url: " + urlStr);
         URL u = null;
         HttpURLConnection conn = null;
@@ -143,7 +143,7 @@ public class Util {
      * Converts the given system time (in milliseconds) to
      * a printable date String.
      */
-    public static String dateToString(long millis) {
+    public synchronized static String dateToString(long millis) {
         Calendar cal = new GregorianCalendar();
         cal.setTimeInMillis(millis);
         StringBuffer currentDate = new StringBuffer();
@@ -173,7 +173,7 @@ public class Util {
     /**
      * Convenience method to get at peek at the cache.
      */
-    public static Hashtable geSiteCache() {
+    public static Hashtable getSiteCache() {
         return siteCache;
     }
     

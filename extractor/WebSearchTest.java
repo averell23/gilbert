@@ -6,6 +6,7 @@
 
 package gilbert.extractor;
 import java.util.*;
+import org.apache.log4j.*;
 
 /**
  *
@@ -21,7 +22,8 @@ public class WebSearchTest {
      * @param args the command line arguments
      */
     public static void main(String args[]) {
-        Util.setLogLevel(Util.LOG_DEBUG);
+        Logger mainlogger = Logger.getLogger("main");
+        PropertyConfigurator.configure("gilbert/extractor/log4j.properties");
         if (args.length == 0) {
             System.out.println("Please give a search string");
             System.exit(1);

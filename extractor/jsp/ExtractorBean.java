@@ -27,8 +27,8 @@ import org.apache.log4j.*;
  * @version CVS $Revision$
  */
 public class ExtractorBean {
-    /// Vector with pages that have been found previously
-    protected Vector currentSet;
+    /// Tree with pages that have been found previously
+    protected TreeMap currentSet;
     /// Fallback URL
     protected VisitorURL fallbackUrl;
     /// URL for the data source.
@@ -51,6 +51,10 @@ public class ExtractorBean {
     protected static long beanCount = 0;
     /// Name for current Bean
     protected String beanName;
+    /// Static keywords...
+    protected String keywords = "ubicomp,wearable,ubiquiotous,context,awareness,ambient";
+    /// Hash with the currently active URLs
+    protected Hashtable urlHash;
     
     /** Creates new ExtractorBean */
     public ExtractorBean() {
@@ -60,27 +64,52 @@ public class ExtractorBean {
             beanCount++;
         }
         NDC.push(beanName);
-        currentSet = new Vector();
+        currentSet = new TreeMap();
+        urlHash = new Hashtable();
         fallbackUrl = new VisitorURL();
-        fallbackUrl.setProperty("url.name", "nothing.html");
-        currentSet.add(fallbackUrl);
+        currentSet.put("nothing.html", new Double(0));
+        
+        timestamp = 0;
+        NDC.pop();
+    }
+    
+    protected ExtractingChain createExtractingChain() {
         extractor = new ExtractingChain(dataSource);
-        SimpleExtractor ext = new SimpleExtractor();
+        
+        Extractor ext = new StraightExtractor();
         ext.addPrefilter(new LocalVisitFilter());
         ext.addPrefilter(new AgentVisitFilter());
+        RTypeVisitFilter rtf = new RTypeVisitFilter();
+        rtf.setDocumentTypes(".gif,.jpg,.pdf,.tif,.png");
+        ext.addPrefilter(rtf);
         extractor.setExtractor(ext);
-        extractor.addRefiner(new SearchingRefiner(true, "ubicomp,handheld,context"));
+        
+        SearchingRefiner search = new SearchingRefiner();
+        search.setKeywords(keywords);
+        extractor.addRefiner(search);
+        
         extractor.addRefiner(new LinkRefiner());
+        
+        MetaKInterestRefiner mkr = new MetaKInterestRefiner();
+        mkr.setKeywords(keywords);
+        mkr.setMaxHandlers(12);
+        extractor.addRefiner(mkr);
+        
+        KWInterestRefiner kwr = new KWInterestRefiner();
+        kwr.setKeywords(keywords);
+        kwr.setMaxHandlers(12);
+        kwr.setWeight(0.5);
+        extractor.addRefiner(mkr);
+        
         Refiner meta = new MetaRefiner();
         DocumentTypeURLFilter docFilter = new DocumentTypeURLFilter();
         docFilter.addDocumentType("text/html");
         meta.addPrefilter(docFilter);
         extractor.addRefiner(meta);
+        
         endRef = new VectorRefiner();
         endRef.addPrefilter(new AliveFilter());
         extractor.addRefiner(endRef);
-        timestamp = 0;
-        NDC.pop();
     }
     
     public void setFallbackUrl(String fbu) {
@@ -112,11 +141,11 @@ public class ExtractorBean {
     /**
      * This gets the Vector containing the Urls
      */
-    public Vector getUrls() {
-        return currentSet;
+    public Enumeration getUrls() {
+        return urlHash.elements();
     }
     
-    /** 
+    /**
      * This gets the timestamp of the last extraction
      */
     public long getTimestamp() {
@@ -127,21 +156,40 @@ public class ExtractorBean {
      * This will update the internal data. If the timeout is reached, the
      * extraction process will be started anew.
      */
-    public void update() throws IOException { 
+    public void update() throws IOException {
         /* Calculate the real time out. Take into account the failures for backoff time. */
         long realTimeout = (failures == 0)?timeOut:((long) (timeOut * ((failures - 1) * 0.25)));
         logger.debug("Real timeout calculated to: " + (realTimeout / 1000));
         if ((timestamp + realTimeout) < System.currentTimeMillis()) {
             if (logger.isDebugEnabled() && (failures != 0)) {
                 logger.debug("Last extraction failed, retry no. " + failures
-                                + " after " + ((System.currentTimeMillis() - timestamp) / 1000)
-                                + " seconds.");
+                + " after " + ((System.currentTimeMillis() - timestamp) / 1000)
+                + " seconds.");
             }
             endRef.reset();
             extractor.extract();
             Vector tmpSet = endRef.getUrlList();
             if (tmpSet.size() != 0) {
-                currentSet = tmpSet;
+                Enumeration tmpE = tmpSet.elements();
+                while (tmpE.hasMoreElements()) {
+                    VisitorURL v = (VisitorURL) tmpE.nextElement();
+                    String name = v.getProperty("url.name");
+                    if (!currentSet.containsKey(name)) {
+                        double interest = 0;
+                        try {
+                            String interestStr = v.getProperty("url.interest");
+                            if (interestStr != null) {
+                                interest = Double.parseDouble(interestStr);
+                            } else {
+                                logger.warn("Extracted URL without interest found.");
+                            }
+                        } catch (NumberFormatException e) {
+                            logger.warn("Refined URL without proper interest found");
+                        }
+                        currentSet.put(name, new Double(interest));
+                    }
+                }
+                
                 timestamp = System.currentTimeMillis();
                 failures = 0;
             } else {

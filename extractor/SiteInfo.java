@@ -45,6 +45,8 @@ public class SiteInfo {
     protected boolean primaryLoaded = false;
     /// If the secondary info has been loaded into this object.
     protected boolean secondaryLoaded = false;
+    /// The tree holding the word count for the words in the document
+    protected TreeMap wordTree;
     
     /** Creates a new instance of SiteInfo */
     protected SiteInfo(String url) {
@@ -53,67 +55,82 @@ public class SiteInfo {
         timestamp = System.currentTimeMillis();
         metaKeywords = new Vector();
         links = new Vector();
+        wordTree = new TreeMap();
     }
     
-    public String getContentType() {
+    public synchronized String getContentType() {
         if (!primaryLoaded) loadPrimaryInfo();
         return contentType;
     }
     
-    protected void setContentType(String content) {
+    protected synchronized void setContentType(String content) {
         contentType = content;
     }
     
-    public long getTimestamp() {
+    public synchronized long getTimestamp() {
         return timestamp;
     }
     
-    public String getUrl() {
+    public synchronized String getUrl() {
         return url;
     }
     
-    protected void setAlive(boolean alive) {
+    protected synchronized void setAlive(boolean alive) {
         this.alive = alive;
     }
     
-    public boolean getAlive() {
+    public synchronized boolean getAlive() {
         if (!primaryLoaded) loadPrimaryInfo();
         return alive;
     }
     
-    public Vector getMetaKeywords() {
+    public synchronized Vector getMetaKeywords() {
         if (!secondaryLoaded) loadSecondaryInfo();
         return metaKeywords;
     }
     
-    protected void addMetaKeyword(String keyword) {
+    protected synchronized void addMetaKeyword(String keyword) {
         metaKeywords.add(keyword);
     }
     
-    public String getMetaDescription() {
+    public synchronized String getMetaDescription() {
         if (!secondaryLoaded) loadSecondaryInfo();
         return metaDescription;
     }
     
-    protected void setMetaDescription(String metaDescription) {
+    protected synchronized void setMetaDescription(String metaDescription) {
         this.metaDescription = metaDescription;
     }
     
-    public String getMetaTitle() {
+    public synchronized String getMetaTitle() {
         if (!secondaryLoaded) loadSecondaryInfo();
         return metaTitle;
     }
     
-    protected void setMetaTitle(String metaTitle) {
+    protected synchronized void setMetaTitle(String metaTitle) {
         this.metaTitle = metaTitle;
     }
     
-    public Vector getLinks() {
+    public synchronized Vector getLinks() {
         if (!secondaryLoaded) loadSecondaryInfo();
         return links;
     }
     
-    protected void addLink(String link) {
+    public synchronized Iterator getDocWords() {
+        if (!secondaryLoaded) loadSecondaryInfo();
+        return wordTree.keySet().iterator();
+    }
+    
+    public synchronized long getDocWordCount(String word) {
+        if (!secondaryLoaded) loadSecondaryInfo();
+        word = word.toLowerCase();
+        long retVal = 0;
+        Object cnt = wordTree.get(word);
+        if (cnt != null) retVal = ((MyLong) cnt).getValue();
+        return retVal;
+    }
+    
+    protected synchronized void addLink(String link) {
         links.add(link);
     }
     
@@ -122,7 +139,7 @@ public class SiteInfo {
      * issue a HEAD request, the body of the document does not need to be
      * retrieved.
      */
-    protected void loadPrimaryInfo() {
+    protected synchronized void loadPrimaryInfo() {
         if (primaryLoaded) {
             logger.debug("Primary info already loaded.");
             return;
@@ -169,7 +186,7 @@ public class SiteInfo {
      * Gets the <i>secondary</i> info about the page. This will issue a
      * GET request, retrieve and parse the whole page (if it is text/html).
      */
-    public void loadSecondaryInfo() {
+    public synchronized void loadSecondaryInfo() {
         if (secondaryLoaded) {
             logger.debug("Secondary info already loaded.");
             return;
@@ -177,7 +194,8 @@ public class SiteInfo {
         if (!primaryLoaded) {
             loadPrimaryInfo();
         }
-        if (getAlive() && getContentType().startsWith("text/html")) {
+        if (getAlive() && (getContentType() != null) && getContentType().startsWith("text/html")) {
+            logger.info("Retrieving secondary information.");
             try {
                 URL u = new URL(url);
                 HttpURLConnection conn = (HttpURLConnection) u.openConnection();
@@ -229,7 +247,7 @@ public class SiteInfo {
         }
         
         public void handleStartTag(HTML.Tag tag, MutableAttributeSet a, int pos) {
-            logger.debug("Parser: Start Tag Handler called.");
+            if (logger.isDebugEnabled()) logger.debug("Parser: Start tag handler called for "+ tag);
             // check for the <title> tag
             if (tag.equals(HTML.Tag.TITLE)) {
                 logger.debug("Parser: Started Title Tag.");
@@ -259,7 +277,7 @@ public class SiteInfo {
         }
         
         public void handleEndTag(HTML.Tag tag, int pos) {
-            logger.debug("Parser: End tag handler called");
+            if (logger.isDebugEnabled()) logger.debug("Parser: End tag handler called for "+ tag);
             if (tag.equals(HTML.Tag.TITLE)) {
                 parseTitle = false;
                 setMetaTitle(titleBuffer.toString());
@@ -271,12 +289,30 @@ public class SiteInfo {
         public void handleText(char[] data, int pos) {
             logger.debug("Parser: Text Handler called");
             if (parseTitle) {
+                if (logger.isDebugEnabled()) logger.debug("Parser: Title Text Handler with text: " + new String(data) + " <<-");
                 titleBuffer.append(data);
+            } else {
+                if (logger.isDebugEnabled()) logger.debug("Parser: Default Text Handler with text: " + new String(data) + " <<-");
+                String dataStr = new String(data);
+                String[] dataTok = dataStr.split("[^\\w]");
+                for (int i=0 ; i < dataTok.length ; i++) {
+                    String tok = dataTok[i];
+                    if (tok.length() > 3) { // Very short words can be discarded
+                        tok = tok.toLowerCase();
+                        Object cnt = wordTree.get(tok);
+                        if (cnt != null) {
+                            ((MyLong) cnt).inc();
+                        } else {
+                            wordTree.put(tok, new MyLong(1));
+                        }
+                    }
+                }
+                logger.debug("Parse: Default Text Handler finished.");
             }
         }
         
         public void handleSimpleTag(HTML.Tag tag, MutableAttributeSet a, int pos) {
-            logger.debug("Parser: Simple Tag Handler called.");
+            if (logger.isDebugEnabled()) logger.debug("Parser: Simple tag handler called for "+ tag);
             if (tag.equals(HTML.Tag.A) && a.isDefined(HTML.Attribute.HREF)) {
                 String attrib = a.getAttribute(HTML.Attribute.HREF).toString().toLowerCase();
                 if (attrib.startsWith("http:")) {
@@ -317,6 +353,38 @@ public class SiteInfo {
                 }
             }
         }
+        
+        public void handleError(String errorMsg, int pos) {
+            if (logger.isDebugEnabled()) logger.debug("HTML parser error: " + errorMsg + " at pos " + pos);
+        }
     } // End of inner class InternalParserCallback
     
+    /**
+     * Class that contains a single long value, that can be reset (unlike
+     * Java's <code>Long</code> class.
+     */
+    protected class MyLong {
+        // value of this instance
+        protected long value;
+        
+        /// Create a new instance.
+        public MyLong(long init) {
+            value = init;
+        }
+        
+        /// Get the value.
+        public long getValue() {
+            return value;
+        }
+        
+        /// Sets a new value
+        public void setValue(long newVal) {
+            value = newVal;
+        }
+        
+        /// Increases the value by 1
+        public void inc() {
+            value++;
+        }
+    }
 }
