@@ -107,7 +107,7 @@ public class Util {
                 Util.logMessage("Got content type: " + contentType, Util.LOG_DEBUG);
                 retVal.setContentType(contentType);
                 // Parse the page if it's HTML
-                if ((contentType != null) && contentType.equals("text/html")) {
+                if ((contentType != null) && contentType.startsWith("text/html")) {
                     DocumentParser parser = new DocumentParser(DTD.getDTD("HTML"));
                     HTMLEditorKit.ParserCallback pc = new Util.InternalParserCallback(retVal);
                     parser.parse(new InputStreamReader(conn.getInputStream()), pc, true);
