@@ -47,6 +47,13 @@ public class RTypeVisitFilter implements VisitFilter {
     public void setInverse(boolean inverse) {
         inverseFilter = inverse;
     }
+    
+    /**
+     * Gets the inverse filtering property.
+     */
+    public boolean getInverse() {
+        return inverseFilter;
+    }
 
     /** Returns true if, and only if, the give Visit is accepted by the filter.
      */
@@ -72,6 +79,32 @@ public class RTypeVisitFilter implements VisitFilter {
                                     + v.getProperty("visit.host") + ", acceptance is " 
                                     + retVal);
         return retVal;
+    }
+    
+    /// Getter Method for document types. Treats document types as comma-separated list.
+    public String getDocumentTypes() {
+        StringBuffer retVal = new StringBuffer();
+        Enumeration typesE = doctypes.elements();
+        if (typesE.hasMoreElements()) {
+            retVal.append(typesE.nextElement());
+        }
+        while (typesE.hasMoreElements()) {
+            retVal.append(",");
+            retVal.append(typesE.nextElement());
+        }
+        return retVal.toString();
+    }
+    
+    /**
+     * Sets document types from a comma-separated list. 
+     * The type list will be completely re-set.
+     */
+    public void setDocumentTypes(String typeStr) {
+        StringTokenizer sTok = new StringTokenizer(typeStr, ",");
+        doctypes = new Vector();
+        while (sTok.hasMoreTokens()) {
+            addDocType(sTok.nextToken());
+        }
     }
     
 }

@@ -46,6 +46,13 @@ public class ReferralVisitFilter implements VisitFilter {
     public void setEmptyPass(boolean pass) {
         emptyPass = pass;
     }
+    
+    /** 
+     * Gets the emptyPass property.
+     */
+    public boolean getEmptyPass() {
+        return emptyPass;
+    }
 
     /** Returns true if, and only if, the give Visit is accepted by the filter.
      */
@@ -66,6 +73,32 @@ public class ReferralVisitFilter implements VisitFilter {
             retVal = emptyPass;
         }
         return retVal;
+    }
+    
+    /// Getter Method for document types. Treats document types as comma-separated list.
+    public String getMatchList() {
+        StringBuffer retVal = new StringBuffer();
+        Enumeration typesE = matchList.elements();
+        if (typesE.hasMoreElements()) {
+            retVal.append(typesE.nextElement());
+        }
+        while (typesE.hasMoreElements()) {
+            retVal.append(",");
+            retVal.append(typesE.nextElement());
+        }
+        return retVal.toString();
+    }
+    
+    /**
+     * Sets document types from a comma-separated list. 
+     * The type list will be completely re-set.
+     */
+    public void setDocumentTypes(String typeStr) {
+        StringTokenizer sTok = new StringTokenizer(typeStr, ",");
+        matchList = new Vector();
+        while (sTok.hasMoreTokens()) {
+            addMatch(sTok.nextToken());
+        }
     }
     
 }

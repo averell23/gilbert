@@ -56,4 +56,29 @@ public class DocumentTypeURLFilter implements URLFilter {
         return accepted;
     }
     
+    /// Getter Method for document types. Treats document types as comma-separated list.
+    public String getDocumentTypes() {
+        StringBuffer retVal = new StringBuffer();
+        Enumeration typesE = types.elements();
+        if (typesE.hasMoreElements()) {
+            retVal.append(typesE.nextElement());
+        }
+        while (typesE.hasMoreElements()) {
+            retVal.append(",");
+            retVal.append(typesE.nextElement());
+        }
+        return retVal.toString();
+    }
+    
+    /**
+     * Sets document types from a comma-separated list. 
+     * The type list will be completely re-set.
+     */
+    public void setDocumentTypes(String typeStr) {
+        StringTokenizer sTok = new StringTokenizer(typeStr, ",");
+        types = new Vector();
+        while (sTok.hasMoreTokens()) {
+            addDocumentType(sTok.nextToken());
+        }
+    }
 }
