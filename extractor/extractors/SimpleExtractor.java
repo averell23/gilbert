@@ -46,6 +46,7 @@ public class SimpleExtractor extends Extractor {
             if (location != null) printTag("location_code", location);
             String time = v.getProperty("visit.timestamp");
             if (time != null) printTag("timestamp", time);
+            printTag("degree", "0");
             endTag("url");
         }
     }
