@@ -56,7 +56,7 @@ public class ExtractorBean {
     public ExtractorBean() {
         // Create the Beans name
         synchronized (ExtractorBean.class) {
-            beanName = "Bean object no " + beanCount;
+            beanName = "ExtractorBean:" + beanCount;
             beanCount++;
         }
         NDC.push(beanName);
@@ -77,6 +77,7 @@ public class ExtractorBean {
         meta.addPrefilter(docFilter);
         extractor.addRefiner(meta);
         endRef = new VectorRefiner();
+        endRef.addPrefilter(new AliveFilter());
         extractor.addRefiner(endRef);
         timestamp = 0;
         NDC.pop();
@@ -127,7 +128,6 @@ public class ExtractorBean {
      * extraction process will be started anew.
      */
     public void update() throws IOException { 
-        NDC.push(beanName);
         /* Calculate the real time out. Take into account the failures for backoff time. */
         long realTimeout = (failures == 0)?timeOut:((long) (timeOut * ((failures - 1) * 0.25)));
         logger.debug("Real timeout calculated to: " + (realTimeout / 1000));
@@ -150,6 +150,5 @@ public class ExtractorBean {
                 timestamp = System.currentTimeMillis();
             }
         }
-        NDC.pop();
     }
 }
