@@ -12,8 +12,8 @@ import org.apache.log4j.xml.*;
 
 /**
  *
- * @author  daniel
- * @version
+ * @author  Daniel Hahn
+ * @version CVS $Revision$
  */
 public class ExtractorTest {
     
@@ -43,6 +43,17 @@ public class ExtractorTest {
         try {
             extClass = Class.forName("gilbert.extractor.extractors." + extractor);
             x = (Extractor) extClass.newInstance();
+            LocalVisitFilter loc = new LocalVisitFilter();
+            FailureVisitFilter fail = new FailureVisitFilter();
+            RTypeVisitFilter rtype = new RTypeVisitFilter();
+            rtype.addDocType("gif");
+            rtype.addDocType("pdf");
+            rtype.addDocType("jpg");
+            rtype.addDocType("zip");
+            rtype.addDocType("gz");
+            x.addPrefilter(loc);
+            x.addPrefilter(fail);
+            x.addPrefilter(rtype);
             timestamp = System.currentTimeMillis();
             x.extract(uri);
             x.getOutputStream().flush();
@@ -55,6 +66,9 @@ public class ExtractorTest {
         }
         long time = (System.currentTimeMillis() - timestamp) / 1000;
         mainlogger.info("Extracting time was " + time + " seconds.");
+        mainlogger.info("Number of visits: " + x.getCount());
+        mainlogger.info("Number of distinctive visits: " + x.getDistinctiveCount());
+        mainlogger.info("Number of visit handlings: " + x.getHandledCount());
         // System.out.println(Util.liveCache);
     }
     
