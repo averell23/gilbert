@@ -35,7 +35,14 @@ implements org.xml.sax.ContentHandler, org.xml.sax.ErrorHandler {
         if (logger.isDebugEnabled()) logger.debug("characters(): -" + new String(ch, start, length) + "-");
         String chS = new String(ch, start, length);
         if (!chS.trim().equals("")) {
-            tagStack.push(new StringBuffer(chS));
+            Object top = tagStack.peek();
+            if (top instanceof StringBuffer) {
+                StringBuffer topB = (StringBuffer) top;
+                topB.append(chS);
+                if (logger.isDebugEnabled()) logger.debug("Top String now: " + topB + " <<-");
+            } else {
+                tagStack.push(new StringBuffer(chS));
+            }
         }
     }
     
