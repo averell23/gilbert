@@ -19,6 +19,7 @@ public class LinkRefiner extends Refiner {
     
     /** Creates a new instance of LinkRefiner */
     public LinkRefiner() {
+        passing = true;
     }
 
     /** Must be overridden by child classes to handle each of
@@ -46,8 +47,8 @@ public class LinkRefiner extends Refiner {
                 String link = (String) linksE.nextElement();
                 Util.logMessage("LinkRefiner: Added linked URL " + link, Util.LOG_MESSAGE);
                 startTag("url");
-                printTag("url.timestamp", (String) url.getProperty("url.timestamp"));
-                printTag("url.degree", "" + (degree + 1));
+                printTag("timestamp", (String) url.getProperty("url.timestamp"));
+                printTag("degree", "" + (degree + 1));
                 endTag("url");
             }
         }
