@@ -1,0 +1,723 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <title>Gilbert - Programming Manual</title>
+      
+  <style type="text/css">
+  <!--
+  .code { 
+      font-family:monospace;
+      font-weight:bold;
+  }
+  .listing {
+      font-family:monospace;
+      font-weight:bold;
+      margin-left:5ex;
+      margin-right:10ex;
+      margin-top:1ex;
+      margin-bottom:2ex;
+      padding:2ex;
+      background-color:beige;
+      width:auto;
+  }
+  .steps {
+      margin-left:5ex;
+      margin-bottom:2ex;
+      background-color:beige;
+      padding:2ex;
+  }
+  .directory { 
+      font-family:monospace;
+      font-weight:bold;
+      margin-left:5ex;
+      margin-right:5ex;
+      padding:2ex;
+      background-color:lavender; 
+  }
+  .dirdesc { 
+      font-weight:normal;
+      font-family:sans-serif;
+      padding-left:1ex;
+  }
+  -->
+  </style>
+</head>
+  <body>
+                   
+<h1>What's included</h1>
+                 
+<p> This package includes the files and tools used for my <i>Studienarbeit</i>
+     and the <i>DoorStep</i> paper. Everything interesting is contained in
+the   <b>gilbert/</b> directory, which you can just copy to the desired location.
+  The contents of this directory are:</p>
+                 
+<table class="directory">
+  <tr>
+    <td>gilbert/build.xml</td>
+    <td class="dirdesc">Central <i>ant</i> build file</td>
+  </tr>
+  <tr>
+    <td>gilbert/extractor/</td>
+    <td class="dirdesc">Extractor Java package</td>
+  </tr>
+  <tr>
+    <td>gilbert/extractor/extractors/</td>
+    <td class="dirdesc">Sample extractor classes.</td>
+  </tr>
+  <tr>
+    <td>gilbert/extractor/refiners/</td>
+    <td class="dirdesc">Sample refiner classes</td>
+  </tr>
+  <tr>
+    <td>gilbert/extractor/filters/</td>
+    <td class="dirdesc">Sample filter classes</td>
+  </tr>
+  <tr>
+    <td>gilbert/extractor/jsp/</td>
+    <td class="dirdesc">Bean classes used in the jsp application
+    (NOT   the jsp pages themselves!)</td>
+  </tr>
+  <tr>   
+    <td>gilbert/extractor/servlets/</td>
+    <td class="dirdesc">Sample servlet application classes (Rather deprecated)</td>
+  </tr>
+  <tr>
+    <td>gilbert/frontend/</td>
+    <td class="dirdesc">JSPs and other files for the web applications</td>
+  </tr>
+  <tr>
+    <td>gilbert/io/</td>
+    <td class="dirdesc">I/O streams for connecting modules</td>
+  </tr>
+  <tr>
+    <td>gilbert/ui/</td>
+    <td class="dirdesc">Graphical front end for the extractor classes</td>
+  </tr>
+  <tr>
+    <td>gilbert/logtools/</td>
+    <td class="dirdesc">Collection of Perl scripts for analysing and modifying      
+    log files. Most of this stuff is unsupported, and some use
+    a mySQL  connection, for which the database is NOT provided.</td>
+  </tr>
+  <tr>
+    <td>gilbert/logtools/Utils.pm</td>
+    <td class="dirdesc">Perl containing common functions</td>
+  </tr>
+  <tr>
+    <td>gilbert/logtools/cgi-bin/</td>
+    <td class="dirdesc">Web scripts</td>
+  </tr>
+  <tr>
+    <td>gilbert/logtools/cgi-bin/weblog.pl</td>
+    <td class="dirdesc">Perl script to provide an XML view of a log file.</td>
+  </tr>
+  <tr>
+    <td>gilbert/sample_logs/</td>
+    <td class="dirdesc">Some sample HTTP log files. This directory may be omitted due to size 
+    and/or privacy reasons.</td>
+  </tr>
+  <tr>
+    <td>gilbert/thirdparty/</td> 
+    <td class="dirdesc">Third-party libraries and products needed for the application</td>
+  </tr>
+</table>
+                 
+<h1>Building the package</h1>
+       This section explains how to compile and installed the included applications. 
+   You should be aware that this is <b>not</b> a finalised application: Be 
+ prepared to get your hands dirty.             
+<h2>Prerequisites</h2>
+             
+<p> To use all of the Perl scripts, you need: </p>
+           
+<ul>
+       <li>Perl 5.6.0 or newer (5.6.0 used for testing)</li>
+       <li>LWP::UserAgent Module</li>
+       <li>HTTP::Request and HTTP::Response (libwww) Modules</li>
+       <li>DBI Module (Many scripts could do without</li>
+       <li>DBD::mysql Module (Many scripts could do without</li>
+       <li>XML::Writer Module</li>
+       <li>XML::Parser Module (Probably not needed at all, requires the expat 
+       toolkit)</li>
+             
+</ul>
+       Note that if you want to go without the database modules (DBD and
+DBI),   you'll need to disable or remove the functions in 
+<span class="code">Utils.pm</span>
+that depend on them. <span class="code">Utils.pm</span> should still be 
+usable for some scripts (esp. <span class="code">weblog.pl</span>) 
+without database support.        
+<p> To use the Java applications you'll need: </p>
+           
+<ul>
+  <li><a href="http://java.sun.com/j2se">JSDK 1.4.0 or newer</a>. 
+  The software was developed using Version 
+  1.4 of Java, and it <b>will not</b> work with previous (1.3 or older)  
+  versions, since it uses the new regexp methods in the 
+  <span class="code">String</span> class.</li>
+  <li><a href="http://xml.apache.org/xerces2-j/">Xerces 2 XML Parser</a> 
+  (jar file included in distribution)</li>
+  <li><a href="http://jakarta.apache.org/log4j/">Log4J 1.2 or newer</a> 
+  (jar file included in distribution)</li>
+  <li><a href="http://jakarta.apache.org/ant/">Jakarta Ant 1.4.1 or newer</a> 
+  (1.4.1 was used for testing). This
+  is  optional,  but it <b>will</b> make your life easier, not only for this
+  project ;-)</li>             
+</ul>
+
+If you're still having trouble compiling, try getting the 
+<a href="http://java.sun.com/j2ee">J2EE files</a>
+ from  Sun.  Parts of the application rely on things like the Servlet API 
+which is not  automatically installed with the JSDK (but may be installed 
+with certain tools).<br/>
+
+If you want to use the JSP application, you will also need a Servlet/JSP
+server. Tomcat 4.0 was used during development, and you should be fine
+with   that one. If  using a different server you should be aware that it
+may provide   a different set of packages in the default 
+<span class="code">CLASSPATH</span> (e.g. Tomcat provides Xerces and Log4J 
+by default). This means you may have to tweak the build process to include
+other <span class="code">.jar</span>s.
+
+<p> 
+The VisualBasic application mentioned in the paper was written by Albrecht
+Schmidt. It <i>may</i> be included in the 
+<span class="code">gilbert/thirdparty/</span> directory,
+or will be available from Albrecht directly. Note that we don't have a
+decent installer right now, so you'll most likely need to have Visual Studio
+and VisualBasic installed to use it.<br/>
+
+To JSP application is best displayed with a CSS capable Browser, like
+Mozilla,  Netscape 7, IE 6 or Opera 6 (or newer, of course).  
+</p>
+                  
+<h2>Compilation/Build</h2>
+           
+<p> Once you've installed everything and set your up your 
+<span class="code">CLASSPATH, JAVA_HOME</span>
+and  <span class="code">ANT_HOME</span> variables correctly, building 
+the Java classes should be as
+easy as  typing 
+<div class="listing">
+cd gilbert<br/>
+ant frontend_war
+</div>
+This should compile all classes and create the
+<span class="code">extractor.jar</span> and 
+<span class="code">gilbert.war</span> files.
+</p>
+<p>
+If you want to delete all those <span class="code">*.class</span> files
+and build everything from scratch, go
+<div class="listing">
+ant extractor_clean
+</div>
+and the JavaDoc documentation is created by calling
+<div class="listing">
+ant extractor_doc
+</div>
+You can also do a
+<div class="listing">
+ant deploy_war
+</div>
+which will compile everything and the deploy the <span class="code">war</span>
+file to your webapps directory. The directory can be configured in the <span
+class="code">gilbert/extractor/build.properties</span> file.
+</p>
+           
+<p> 
+The <b>Perl scripts</b> should theoretically work out of the box, as
+long as all necessary modules are available and they don't need
+a mySQL connection. Just make sure that the paths to the 
+<span class="code">Perl</span> binary and the modules are set correctly.
+</p>
+           
+<h2>Installation</h2>
+         
+<p>
+The best way to run the stand-alone Java applications is to include the
+<span class="code">extractor.jar</span> in your
+<span class="code">CLASSPATH</span>. However, you can also include the
+directory <b>above</b> <span class="code">gilbert/</span> if you want to
+use the classes directly.
+</p>
+
+<h3>Test Tools</h3>
+<p>
+<span class="code">gilbert/extractor/</span> contains a number of classes that
+can be used to test different modules. These classes are named
+<span class="code">*Test.class</span> and can be called directly, e.g.
+<div class="listing">
+Java gilbert.extractor.RefinerTest
+</div>
+Calling the test tools without parameters should print a brief usage
+information.
+</p>
+<p>
+Note that none of the test tools is very configurable, and if you want to
+use them for your own modules you <b>will</b> have to hack the source.
+
+<h3>GilGUI</h3>
+<i>GilGUI</i> is a graphical user interface that allows you to test 
+<i>gilbert</i> classes together. The GUI can be started by calling
+<div class="listing">
+java gilbert.ui.GilGUI
+</div>
+The interface should be more or less self-explanatory: You select the modules
+that you wish to use and configure them. Note that the output windows work 
+erratically at the moment, if at all. We recommend that you save the XML output
+to a file and use log4j's <i>chainsaw</i> tool to view the log messages.
+<p>
+If you want to use your own classes together with the UI, you need to
+change   
+<span class="code">gilbert.ui.DataHandler.java</span> 
+so that it the respective method
+returns  your classes name. The easiest way is to just add a line with your
+classes  name and hard code it like the default classes (although you could
+also write  an interactive class browser ;-). The names of the classes are
+the only thing  that is hard coded, and if your class is properly written
+it should work with  the UI without further changes. 
+</p>
+
+<h3>Server log source</h3>
+<p>
+The JSP application, as well as the driver for the VisualBasic display, needs to
+read XML encoded visitor information (usually your web server log file). The data
+can be read from any URL, so you're free to write your own data source if you
+like.
+</p>
+<p>
+If you have a fairly standard setup, you can use the 
+<span class="code">gilbert/logtools/cgi-bin/weblog.pl</span> CGI script
+to convert your log file for you and make the data available. To install
+the script:
+<ul class="steps">
+  <li>
+    Copy <span class="code">gilbert/logtools/cgi-bin/weblog.pl</span>,
+    <span class="code">gilbert/logtools/Utils.pm</span> and 
+    <span class="code">gilbert/logtools/country-codes.txt</span>
+    to your web server's CGI directory.
+  </li>
+  <li>Make sure that the prerequisites for running the Perl scripts are met.</li>
+  <li>Edit <span class="code">weblog.pl</span>:</li>
+  <ul>
+    <li>
+      <span class="code">@local_net</span> should contain a list of the leftmost 
+      numbers of all subnets you consider <i>local</i>.
+    </li>
+    <li>
+      <span class="code">@local_domain</span> should contain a list of the
+      domain names you consider <i>local</i>.
+    </li>
+    <li>
+      <span class="code">$COUNTRY_CODES_NAME</span> should point to the
+      file <span class="code">country-codes.txt</span>.
+    </li>
+    <li>
+      <span class="code">$LOGFILE_MODE</span> should be the name of a
+      valid log file mode. Valid log file modes are
+      <span class="code">STANDARD</span> for standard (simple) log files,
+      <span class="code">COMBINED</span> for Apache's combined log file
+      format and <span class="code">ALBRECHT</span> for TeCO log files
+      that use Albrecht Schmidt's home-grown format. If you need a
+      different format, you can add it to the 
+      <span class="code">split_logline</span> subroutine in 
+      <span class="code">Utils.pm</span>.
+    </li>
+    <li>
+      The first <span class="code">open()</span> statement in the script
+      contains a call to <span class="code">tail</span>. Edit the command
+      so that it prints the last <i>n</i> lines of your own web server
+      log. Note that the log must be readable to the script.
+    </li>
+  </ul>
+  <li>Connect to the script's URL to test it.</li>
+  <li>Bear in mind that anyone who can access the script will
+      be able to read your web server log!</li>
+</ul>
+
+<h3>Runtime configuration</h3>
+<p>
+Some runtime variables can be configured through the <span
+class="code">gilbert/extractor/gilbert.properties</span> file. The properties
+are:
+<table class="directory">
+  <tr>
+    <td>gilbert.cacheTimeout</td>
+    <td class="dirdesc">Timeout for cache entries (in seconds)</td>
+  </tr>
+  <tr>
+    <td>gilbert.cacheCleanupInterval</td>
+    <td class="dirdesc">Interval between cache cleanup runs (in hours)</td>
+  </tr>
+  <tr>
+    <td>gilbert.proxyHost</td>
+    <td class="dirdesc">Name of the proxy host to use. Leave empty or set to
+    <i>disabled</i> to connect directly</td>
+  </tr>
+    <td>gilbert.proxyPort</td>
+    <td class="dirdesc">Port for the proxy server (if on is used)</td>
+  </tr>
+    <td>gilbert.httpTimeout</td>
+    <td class="dirdesc">Default timeout for HTTP operations (in milliseconds)</td>
+  </tr>
+</table>
+
+       
+<h3>JSP Application</h3>
+<p>
+We assume that you have the Tomcat web server/servlet engine installed - you
+should be able to use the JSPs with any servlet engine, but the installation
+procedure will vary.
+</p>
+<p>
+The installation procedure for the JSP application is quite simple:
+<ul class="steps">
+  <li>
+    Copy <span class="code">gilbert/gilbert.war</span> to 
+    <span class="code">$tomcat_home/webapps/</span>
+  </li>
+  <li>
+    (Re-)Start the Tomcat server. This will unpack and install
+    the web application.
+  </li>
+  <li><b>Before</b> calling the application for the first time, you should
+  configure it:</li>
+  <ul>
+    <li>Edit <span class="code">webapps/gilbert/main.jsp</span>.
+    The <span class="code">dataSource</span> property should be set
+    to a data source URL (see above). You may also tweak the other
+    properties, if you like.
+    </li>
+    <li>If you want to change the logging behaviour, edit
+    <span class="code">log4j.properties</span>
+    </li>
+  </ul> 
+  <li>The application can now be called at 
+    <span class="code">http://[tomcat-URL]/gilbert/main.jsp</span>
+  </li>
+  <li>
+    If you want to install a different version of the application, <b>stop</b>
+    the Tomcat server and delete <span class="code">gilbert.war</span>
+    and the <span class="code">gilbert/</span> directory.
+  </li>
+</ul>
+                  
+<h1>Programming Guide</h1>
+<p>
+<i>gilbert</i> is our Java-based implementation of the <i>DoorStep</i> system.
+The step-through example in the <i>DoorStep</i> paper should give you a good
+idea on how <i>gilbert</i> works, so read it first. 
+</p>
+<p>
+Creating new <i>gilbert</i> modules should be reasonably simple. This document
+highlights the main concepts and caveats that you need to know in order to
+create a "clean" module that will run seamlessly with all the other parts of the
+framework. You should also create the JavaDoc before you start, which contains
+even more information about the individual classes (see above).
+</p>
+ 
+<h2>The <i>gilbert</i> architecture</h2>
+<p>
+The basic building blocks of the architecture are the 
+<span class="code">Extractor</span>
+and  <span class="code">Refiner</span> modules. Both read XML entities from an 
+<span class="code">InputSource</span> and print their XML output to a
+<span class="code">PrintStream</span>. Both inherit common functions from 
+the <span class="code">AbstractTransmutor</span> class and have their own XML
+handlers. All modules can be configured to run multi-threaded, since
+multi threading support is already built into the base classes.
+</p>
+<p>
+The chaining of multiple modules is usually handled by an
+<span class="code">ExtractingChain</span> or a <span
+class="code">RefinerChain</span> (although a module can also be used
+independently). The <span class="code">Util</span> class contains (among other
+things) methods for querying remote hosts that use <i>gilbert</i>'s internal
+caching architecture.
+</p>
+<h3>Log4J</h3>
+<p>
+All <i>gilbert</i> classes print their debug and logging output through the
+<i><a href="http://jakarta.apache.org/log4j/">Log4J</a></i> interface 
+<i>Log4J</i> is a highly configurable logging tool from the Jakarta project, you
+must import the <span class="code">org.apache.log4j.*</span> package to use it.
+</p>
+<p>
+The <i>gilbert</i> tools (including the JSP application) read the <i>Log4J</i>
+configuration from <span class="code">gilbert/extractor/log4j.properties</span>.
+The syntax and options for that file are covered in the <i>Log4J</i>
+documentation. Note that setting the logging level to <span
+class="code">debug</span> will result in a <b>huge</b> amount of logging input.
+</p>
+<p>
+The default <span class="code">log4j.properties</span> file already contains
+configurations to log to a file, to the console or to Log4J's graphical log
+viewer <i>Chainsaw</i>. (Note that Log4j will complain if it is configured to
+connect to the <i>Chainsaw</i> viewer but cannot do so. Other configured
+mechanisms will still work, though.
+</p>
+<p>
+For you own programs to use the <i>Log4J</i> interface properly you must
+configure it by inserting the following into your initialisation code:
+<div class="listing">
+PropertyConfigurator.configure("gilbert/extractor/log4j.properties");
+</div>
+This call only needs to be made <i>once</i> (i.e. before you start logging
+anything), and there's no need to include into every class you write. However,
+if you wish to log events from your own classes (which you should!), you must
+get a logger for your class (this code should be put into your class' body (not
+a method) to make the logger variable global):
+<div class="listing">
+protected static Logger logger = Logger.getLogger(this.getClass());
+</div>
+You can then log everything through the <span class="code">logger</span> object
+- <b>do not</b> use <span class="code">System.*.println()</span> for anything!
+Look up the <i>Log4J</i> documentation to learn more about how to use the
+<i>Log4J</i> and the <span class="code">logger</span> object you've just
+created.
+</p>
+<h3>Caching</h3>
+Your <i>Extractor</i> or <i>Refiner</i> modules probably need to query a lot of
+HTTP servers (e.g. to check if the server is alive, to check the document type
+or parse the page). Since opening a HTTP connection is a fairly expensive
+operation, <i>gilbert</i> tries to cache all requests. To benefit from
+<i>gilbert</i>'s caching system, make <b>all</b> server request through the
+<span class="code">Util</span> class. For example, if you need information
+about the URL <span class="code">www.dahost.com/dadocument/</span>, do the
+following:
+<div class="listing">
+SiteInfo urlInformation = Util.siteStatus("http://www.dahost.com/dadocument/");
+</div>
+The function will either return the <span class="code">SiteInfo</span> object
+for <span class="code">http://www.dahost.com/dadocument/</span> from the cache
+or create a new <span class="code">SiteInfo</span> object and store it in the
+cache. Calling the <span class="code">siteStatus()</span> method will
+<i>never</i> cause a HTTP connection to be made, this will only take place when
+you query the <span class="code">SiteInfo</span> object: A call like
+<div class="listing">
+boolean urlLive = urlInformation.getAlive();
+</div>
+would the <span class="code">SiteInfo</span> object to connect to the URL and
+return whether or not it is alive. If you call the <span
+class="code">getAlive()</span> method a second time, the <span
+class="code">SiteInfo</span> object returns it's internally cached value.
+</p>
+<p>
+The <span class="code">SiteInfo</span> class provides a variety of useful
+methods which allow you to query remote hosts. Each <span
+class="code">SiteInfo</span> object handles exactly one URL, and it will query
+that URL according to the following scheme:
+<ul>
+  <li>The object is created empty. No connection is made.</li>
+  <li>When the object is queried for the first time, it contacts the URL.
+      The information is stored in the object.</li>
+  <li>All subsequent queries only retrieve the internally stored data. No
+      further connections are made.</li>
+  <li>The object will always issue a HTTP HEAD request first. If the request 
+      can be answered using the HEAD request's results, no further connection is
+      made.</li>
+  <li>If necessary, the object issues a HTTP GET request to download the URL's 
+      resource. If the URL is not alive, or if it serves a wrong resource type,
+      the GET request will not be sent.</li>
+  <li>If a request to the object can be answered using only the HEAD request,
+      the GET request will not be made. If a subsequent request to the object
+      needs the GET request, it will be made at that time.
+</ul>
+If the information you need cannot be retrieved by using <span
+class="code">SiteInfo</span>'s methods, <b>it is highly recommended that you
+extend the <span class="code">SiteInfo</span> class instead of making HTTP
+connections yourself.</b>
+</p>
+<h3>Multi threading</h3>
+<p>
+Each <i>Extractor</i> or <i>Refiner</i> module will automatically spawn a new
+thread for each URL that is processed. The number of threads is limited by the
+classes internal variable <span class="code">maxHandlers</span>. If <span
+class="code">maxHandlers</span> is set to 1 all operations will be executed
+sequentially. To support multi threading, your module must lock the output stream
+correctly (see the following chapter).
+</p>
+<p>
+Since making a HTTP request always involves waiting for the network's response,
+parallel request speed up the processing considerably - especially if timeouts
+are involved (in the Lancaster network, multi threading gave a speedup of factor
+ten to one hundred). 
+</p>
+<h2>Anatomy of a good <i>Extractor</i></h2>
+<p>
+This chapter gives you an overview on how the <span
+class="code">Extractor</span> class works and what you need to do to make your
+module compatible with the <i>gilbert</i> framework. Except for some slightly
+different method names, the procedure is almost the same for <i>Refiner</i>
+modules.
+</p>
+<p>
+An <span class="code">Extractor</span> reads a data stream (which must be in the
+<i>gilbert</i> XML format) from an URL and prints the (XML) results to a <span
+class="code">PrintStream</class>. Using one of the existing <i>Extractors</i> is
+pretty straightforward:
+<div class="listing">
+Extractor myExtractor = new StraightExtractor();<br/>
+PrintStream someStream = x; // A stream for the output<br/>
+// Sets the output<br/>
+// Default is System.out<br/>
+myExtractor.setOutputStream(someStream);<br/>
+// Start extraction from "someURI"<br/>
+myExtractor.extract("http://someURI");<br/>
+</div>
+When the <span class="code">extract()</span> method is called, the <span
+class="code">Extractor</span> will read from the given URI, trying to parse it
+as an XML document. The Extractor will print it's results to it's output stream
+<span class="code">someStream</span>. The <span class="code">extract()</span>
+method will block until the processing is complete and the last handling thread
+has died.
+</p>
+<p>
+The <span class="code">Extractor</span> calls a <span
+class="code">VisitXMLHandler</span> to parse the input. Whenever the handler has
+parsed a complete <i>url</i> tag, it will encode the information into a <span
+class="code">Visit</span> object, and pass it to the <span
+class="code">Extractor</span>'s <span class="code">handleVisit()</span> method.
+The <span class="code">handleVisit</span> method is the hook for the modules: In
+the simplest case a new module will only need to overwrite <span
+class="code">handleVisit</span>. Inside the method the individual visit can be
+analysed, and the output be printed. Thus, a simple <i>Extractor</i> module will
+look like this:
+<div class="listing">
+import org.xml.sax.*;<br/>
+import gilbert.extractor.*;<br/>
+import java.util.*;<br/>
+import org.apche.log4j.*;</br>
+<br/>
+public class MyExtractor extends Extractor {<br/>
+  &nbsp;&nbsp;&nbsp;&nbsp;// Create the logging object<br/>
+  &nbsp;&nbsp;&nbsp;&nbsp;protected Logger logger = Logger.getLogger(this.getClass());<br/>
+<br/>
+  &nbsp;&nbsp;&nbsp;&nbsp;public MyExtractor() {<br/>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;super();<br/>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// Your own initialisation code, if needed<br/>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// You need to take care of this yourself:<br/>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;visitHash = new Hashtable();<br/>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// Set the desired number of handlers:<br/>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;maxHandlers = 25;<br/>
+  &nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+  <br/>
+  &nbsp;&nbsp;&nbsp;&nbsp;protected void handleVisit(Visit v) {<br/>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// Handle each visit in this routine<br/>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// Processing is done here<br/>
+  &nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+  <br/>
+  &nbsp;&nbsp;&nbsp;&nbsp;public synchronized void extract(String uri) {<br/>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;extract(new InputSource(uri));<br/>
+  &nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+  <br/>
+  &nbsp;&nbsp;&nbsp;&nbsp;public synchronized void extract(InputSource input) {<br/>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// If you need per-run initialisation, do it here.<br/>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// Since the super class doesn't clean up after <br/>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// a run, you should do:<br/>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;visitHash = new Hashtable();<br/>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;super.extract(input);<br/>
+  &nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+}<br/>
+</div>
+</p>
+<p>
+The <span class="code">visitHash</span> is a <span class="code">Hashtable</span>
+that contains the URLs of all visits the <span class="code">handleVisit</span>
+method has already handled. If a visit's URL is contained in the <span
+class="code">visitHash</span> it will automatically be skipped and <span
+class="code">handleVisit</span> will not be called. <span
+class="code">v</span>'s URL will automatically be added to the <span
+class="code">visitHash</span>.
+</p>
+<h3>How it should look like</h3>
+An <span class="code">Extractor</span> or <span class="code">Refiner</span>
+module that is compatible with the
+<i>gilbert</i> framework must have these properties:
+<ul>
+  <li>Be <i>Bean-like</i>: To ensure that it can be loaded and used with
+      reflection, the module <b>must</b>
+      provide a parameter-less constructor plus <span class="code">get</span> and
+      <span class="code">set</span> methods for all relevant properties.
+  </li>
+  <li>The module <b>must</b> lock the <span
+      class="code">outputStream</span> correctly if it wants to use
+      multi threading. (See below)
+  </li>
+  <li>The module <b>must</b> always print an XML
+      document in the correct format on it's output, unless it is a <span
+      class="code">Refiner</span> that is an interface to the user display
+      subsystem.
+  <li>The module <b>should</b> always use the XML printing methods provided by
+      <span class="code">AbstractTransmutor</span>. These methods will attempt
+      to automatically convert special characters.
+  </li>
+</ul>
+<h3>Locking the output stream</h3>
+If the <span class="code">Extractor</span> is running multi-threaded, it will
+spawn a new thread each time <span class="code">handleVisit()</span> is called.
+To ensure that the output is correct, the code must be synchronised on the
+<span class="code">outStream</span> for a <i>complete url tag</i> to be
+written. This will look like:
+<div class="listing">
+synchronize (outStream) {<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;// print the complete URL tag here, preferably<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;// using the methods from AbstractTransmutor<br/>
+}<br/>
+</div>
+If you forget to synchronize on the output stream you may print <i>between</i>
+other handler's output, resulting in a corrupted stream.
+<h3>Examples</h3>
+If you want to see how it all fits together, take a look at the classes that
+come with the <i>gilbert</i> package. For an example for the <span
+class="code">Extractor</span> module, see <span
+class="code">gilbert/extractor/extractors/StraightExtractor.java</span>.
+
+<h1>Known Issues</h1>
+The software in this package is of <b>alpha</b> quality and <b>not</b> intended
+for production use! There are a number of issues that need to be addressed in
+future versions.
+<ul>
+<li><b>Webapp/URL selection:</b> The URL selection in <span
+class="code">gilbert.extractor.jsp.ExtractorBean</span> is badly implemented (in
+fact, the whole class is). The URL are randomly selected, without considering
+the URLs rating. Also, <i>all</i> old URLs are discarded on each update, which
+is probably not the best idea
+</li>
+<li><b>Caching:</b> Cache entries are only discarded if they are stale. There's
+no limit to the number of cache entries, which could lead to memory problems.
+Stale entries should not have a lifetime of longer than <span
+class="code">gilbert.cacheCleanupInterval</span>, however.
+</li>
+<li><b>XML:</b> The XML connections between the different modules appear to be
+unstable under various circumstance, and the error handling does not always
+successfully deal with problems. This one needs thorough debugging and testing.
+Probable reasons for the instabilities:
+<ul>
+<li><b>Parser classes:</b> The parser classes could still contain unnoticed bugs
+that only show up under obscure circumstance, although they appeared stable
+enough in tests. "Bugs" could also be exposed if the input format is changed.
+</li>
+<li><b>Special characters:</b> The XML parser is very touchy when encountering
+"illegal" characters in the input. Unfortunately, they show up quite often in
+log files. Always use <span
+class="code">gilbert.extractor.AbstractTransmutor.printTag()</span>, which calls
+<span class="code">gilbert.extractor.AbstractTransmutor.normalizeAndPrint()</span> 
+to replace illegal characters
+(<span class="code">AbstractTransmutor</span> is the superclass of both <span
+class="code">Extractor</span> and <span class="code">Refiner</span>). If the XML
+parser chokes on an illegal character, add it to <span
+class="code">normalizeAndPrint()</span>.
+</li>
+<li><b>Threading:</b> Faulty synchronisation can lead to messed-up XML.</li>
+<li><b>Thread communication:</b> The threads communicate through the classes
+found in <span class="code">gilbert.io.*</span>. They probably need some more
+testing.
+</li>
+</ul>
+</li>
+</ul>
+
+</body>
+</html>
