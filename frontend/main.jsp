@@ -34,7 +34,7 @@
         } else {
             state.setAutoReload(true);
         }
-        if ((turnPar == null) || (!turnPar.equals("off"))) { // Should preserve state when switching reload off...
+        if ((turnPar == null) || (turnPar.equals("on"))) { // Should preserve state when switching reload off...
             // set the base URI for the state
             state.setBaseURI(request.getRequestURI());
             // select a new URL to show

@@ -41,6 +41,7 @@
             <fileset dir="gilbert/frontend" includes="**/*.html" />
             <fileset dir="gilbert/frontend" includes="**/*.jsp" />
             <fileset dir="gilbert/frontend" includes="**/*.css" />
+            <fileset dir="gilbert/frontend" includes="**/*.gif" />
             <lib dir="gilbert">
                 <include name="extractor.jar" />
             </lib>
