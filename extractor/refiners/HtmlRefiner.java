@@ -7,6 +7,7 @@
 package gilbert.extractor.refiners;
 import org.xml.sax.*;
 import gilbert.extractor.*;
+import org.apache.log4j.*;
 
 /**
  * Refiner that turns an URL list into a XHTML page
@@ -15,9 +16,12 @@ import gilbert.extractor.*;
  * @version CVS $Revision$
  */
 public class HtmlRefiner extends Refiner {
-
+    /// Logger for this class
+    Logger logger;
+    
     /** Creates new HtmlRefiner */
     public HtmlRefiner() {
+        logger = Logger.getLogger(this.getClass());
         passing = false; // The output of this refiner is HTML, so no passing on.
     }
     
@@ -26,7 +30,7 @@ public class HtmlRefiner extends Refiner {
      * URL list.
      */
     public void refine(InputSource input) {
-        Util.logMessage("HtmlRefiner: Starting HTML writing", Util.LOG_DEBUG);
+        logger.debug("HtmlRefiner: Starting HTML writing");
         startTag("html");
         startTag("head");
         printTag("title", "URL list created by HtmlRefiner");

@@ -9,6 +9,7 @@ import java.util.*;
 import java.net.*;
 import org.xml.sax.*;
 import gilbert.extractor.*;
+import org.apache.log4j.*;
 
 /**
  * This takes a existing list of URLs and searches the web for pages with
@@ -28,6 +29,8 @@ public class SearchingRefiner extends Refiner {
     protected Hashtable refHash;
     /** The languages for this search */
     protected String langStr;
+    /// Logger for this class
+    protected Logger logger;
     
     /**
      * Creates a new instance of SearchingRefiner.
@@ -38,6 +41,7 @@ public class SearchingRefiner extends Refiner {
      */
     public SearchingRefiner(boolean passing, String keywordList) {
         super();
+        logger = Logger.getLogger(this.getClass());
         // initialize the search Object
         mySearch = new GoogleSearch();
         sProps = new Properties();
@@ -78,32 +82,34 @@ public class SearchingRefiner extends Refiner {
      * the postfilters.
      */
     public void handleURL(VisitorURL url) {
-        Util.logMessage("Refiner: Handling new URL", Util.LOG_DEBUG);
+        logger.debug("Refiner: Handling new URL");
         int degree = 0;
         try {
             degree = Integer.valueOf(url.getProperty("url.degree")).intValue();
         } catch (NumberFormatException e) {
-            Util.logMessage("SearchingRefiner: Could not determine degree : " + e.getMessage(), Util.LOG_ERROR);
+            logger.warn("SearchingRefiner: Could not determine degree : " + e.getMessage());
         }
-        Util.logMessage("SearchingRefiner: Url has degree " + degree, Util.LOG_MESSAGE);
+        if (logger.isDebugEnabled()) logger.debug("SearchingRefiner: Url has degree " + degree);
         String urlStr = url.getProperty("url.name");
         URL tURL = null;
         try {
             tURL = new URL(urlStr);
             String hostStr = tURL.getHost();
-            Util.logMessage("Refiner: Found host name: " + hostStr, Util.LOG_DEBUG);
+            if (logger.isDebugEnabled()) logger.debug("Refiner: Found host name: " + hostStr);
             
             String[] parts = hostStr.split("\\.");
             if ((parts == null) || (parts.length == 0)) {
-                System.err.println("Error splitting hostname");
+                logger.error("Error splitting hostname");
                 return;
             }
             String domainName = parts[parts.length - 2] + "." + parts[parts.length -1];
-            Util.logMessage("Refiner: Trying to search domain: " + domainName, Util.LOG_MESSAGE);
+            if (logger.isInfoEnabled()) {
+                logger.info("Trying to search domain: " + domainName);
+            }
             sProps.setProperty("search.domains", domainName);
             mySearch.setParameters(sProps);
             Vector results = mySearch.search();
-            Util.logMessage("Refiner: Domain search complete.", Util.LOG_DEBUG);
+            logger.debug("Domain search complete.");
             if (results != null) {
                 Enumeration resultsE = results.elements();
                 while (resultsE.hasMoreElements()) {
@@ -119,9 +125,9 @@ public class SearchingRefiner extends Refiner {
                 }
             }
         } catch(MalformedURLException e) {
-            Util.logMessage("Source URL malformed: " + urlStr, Util.LOG_ERROR);
+            logger.warn("Source URL malformed: " + urlStr);
         }
-        Util.logMessage("Refiner: Url handler finished.", Util.LOG_DEBUG);
+        logger.debug("Url handler finished.");
     }
     
 }
