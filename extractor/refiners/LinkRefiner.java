@@ -47,6 +47,7 @@ public class LinkRefiner extends Refiner {
                 String link = (String) linksE.nextElement();
                 Util.logMessage("LinkRefiner: Added linked URL " + link, Util.LOG_MESSAGE);
                 startTag("url");
+                printTag("name", link);
                 printTag("timestamp", (String) url.getProperty("url.timestamp"));
                 printTag("degree", "" + (degree + 1));
                 endTag("url");
