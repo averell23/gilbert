@@ -17,27 +17,46 @@ import org.apache.log4j.*;
  */
 public class RefinerTest {
 
-    /** Creates new RefinerTest */
-    public RefinerTest() {
-    }
-
     /**
     * @param args the command line arguments
     */
     public static void main (String args[]) {
-        BasicConfigurator.configure();
+        Logger mainlogger = Logger.getLogger("main");
+        PropertyConfigurator.configure("gilbert/extractor/log4j.properties");
         if (args.length == 0) {
-            System.err.println("Please give the uri to open.");
+            System.err.println("Usage: RefinerTest [Refiner] <source uri>");
             System.exit(1);
         }
-        Util.setLogLevel(Util.LOG_DEBUG);
-       // Refiner x = new SearchingRefiner(true, "ubicomp, handheld,context");
-        Refiner x = new LinkRefiner();
-        x.refine(args[0]);
-        /* Enumeration e = x.getUrlList().elements();
-        while (e.hasMoreElements()) {
-            System.out.println(e.nextElement());
-        } */
+        String refiner = "DumpRefiner";
+        String uri = "";
+        if (args.length > 1) {
+            refiner = args[0];
+            uri = args[1];
+        } else {
+            uri = args[0];
+        }
+        Refiner x = null;
+        Class refClazz = null;
+        long timestamp = System.currentTimeMillis();
+        try {
+            if (refiner.equals("SearchingRefiner")) {
+                x = new SearchingRefiner(true, "ubicomp, handheld, context");
+            } else {
+                refClazz = Class.forName("gilbert.extractor.refiners." + refiner);
+                x = (Refiner) refClazz.newInstance();
+            }
+            timestamp = System.currentTimeMillis();
+            x.refine(uri);
+            x.getOutputStream().flush();
+        } catch (ClassNotFoundException e) {
+            mainlogger.error("Cannot find class: " + e.getMessage(), e);
+        } catch (InstantiationException e) {
+            mainlogger.error("Cannot instantiate class: " + e.getMessage(), e);
+        } catch (IllegalAccessException e) {
+            mainlogger.error("Access violation: " + e.getMessage(), e);
+        }
+        long time = (System.currentTimeMillis() - timestamp) / 1000;
+        mainlogger.info("Extracting time was " + time + " seconds.");
     }
 
 }
