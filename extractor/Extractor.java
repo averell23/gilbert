@@ -39,8 +39,14 @@ public abstract class Extractor extends AbstractTransmutor {
     protected boolean postfiltering = false;
     /// Visit XML Handler
     protected VisitXMLHandler tHandler;
+    /** Hashtable containing alredy visited hosts */
+    protected Hashtable visitHash;
     /// Logger for this class
     protected static Logger logger = Logger.getLogger(Extractor.class);
+    /// Visit counter
+    protected long counter = 0;
+    /// Counts the number of times handleVisit() was called for a distinctive visit
+    protected long distinctCounter = 0;
     
     /**
      * Creates a new extractor.
@@ -121,23 +127,45 @@ public abstract class Extractor extends AbstractTransmutor {
      * the <code>handleVisit</code> method.
      */
     protected void recieveVisit(Visit v) {
-        if (prefiltering) {
-            logger.debug("Extractor: Executing prefilters.");
-            boolean accepted = true;
-            Enumeration filters = prefilters.elements();
-            while (filters.hasMoreElements()) {
-                VisitFilter cFilter = (VisitFilter) filters.nextElement();
-                if (logger.isDebugEnabled()) {
-                    logger.debug("Filtering: Executing filter: " + cFilter.getClass().getName());
+        counter++;
+        String host = v.getProperty("visit.host");
+        if (!visitHash.containsKey(host)) {
+            if (prefiltering) {
+                logger.debug("Extractor: Executing prefilters.");
+                boolean accepted = true;
+                Enumeration filters = prefilters.elements();
+                while (filters.hasMoreElements()) {
+                    VisitFilter cFilter = (VisitFilter) filters.nextElement();
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("Filtering: Executing filter: " + cFilter.getClass().getName());
+                    }
+                    accepted = accepted && cFilter.accept(v);
                 }
-                accepted = accepted && cFilter.accept(v);
+                if (!accepted) {
+                    if (logger.isDebugEnabled()) logger.debug("Extractor: Some filter rejected the visit. Returning to Handler.");
+                    return;
+                }
             }
-            if (!accepted) {
-                if (logger.isDebugEnabled()) logger.debug("Extractor: Some filter rejected the visit. Returning to Handler.");
-                return;
-            }
+            visitHash.put(host, "visited");
+            distinctCounter++;
+            handleVisit(v);
+        } else {
+            if (logger.isDebugEnabled()) logger.debug("Ignored previously encontered host: " + host);
         }
-        handleVisit(v);
+    }
+    
+    /**
+     * Get the number of visits parsed.
+     */
+    public long getCount() {
+        return counter;
+    }
+    
+    /**
+     * Get the number of distinctive visits handled.
+     */
+    public long getDistinctiveCount() {
+        return distinctCounter;
     }
     
     /**
