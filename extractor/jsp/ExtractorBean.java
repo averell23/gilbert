@@ -58,6 +58,7 @@ public class ExtractorBean {
         ext.addPrefilter(new AgentVisitFilter());
         extractor.setExtractor(ext);
         extractor.addRefiner(new SearchingRefiner(true, "ubicomp,handheld,context"));
+        extractor.addRefiner(new LinkRefiner());
         Refiner meta = new MetaRefiner();
         DocumentTypeURLFilter docFilter = new DocumentTypeURLFilter();
         docFilter.addDocumentType("text/html");
