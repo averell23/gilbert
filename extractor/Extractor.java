@@ -67,11 +67,13 @@ public abstract class Extractor extends AbstractTransmutor {
         try {
             parser.parse(input);
         } catch (SAXException e) {
-            System.err.println("*** Extractor aborting due to error: " + e.getMessage());
+            Util.logMessage("*** Extractor aborting due to error: " + e.getMessage(), Util.LOG_ERROR);
             e.printStackTrace();
             // System.exit(1);
         } catch (java.io.IOException e) {
-            System.err.println("*** Error opening location: " + input);
+            Util.logMessage("*** Error opening location: " + input, Util.LOG_ERROR);
+            Util.logMessage("*** Input public Id was: " + input.getPublicId(), Util.LOG_ERROR);
+	    e.printStackTrace();
             // System.exit(1);
         }
         outStream.println("</url_list>");
@@ -82,6 +84,7 @@ public abstract class Extractor extends AbstractTransmutor {
      */
     public void extract(String uri) {
         InputSource src = new InputSource(uri);
+	src.setPublicId(uri);
         extract(src);
     }
 
